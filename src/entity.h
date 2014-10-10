@@ -7,7 +7,7 @@
 #define MAXSTATES		20
 #define SOUNDSPERENT	4
 
-enum STATES {ST_IDLE,ST_WALK,ST_JUMP,ST_DEAD,ST_ENEMY,ST_TILE};
+enum STATES {ST_IDLE,ST_WALK,ST_JUMP1,ST_JUMP2,ST_DEAD,ST_ENEMY,ST_TILE};
 
 typedef struct ENTITY_T
 {
@@ -21,16 +21,17 @@ typedef struct ENTITY_T
 	int state;
 	int sx,sy;
 	int animframe;
+	int isRight;
 	int busy;
 	int delay;
-	int vx,vy;
+	float vx,vy;
 	int framestates[MAXSTATES];
 	SDL_Rect bbox;
 	int health;
 	int healthmax;
 }Entity;
 
-
+/*General Entity Stuff*/
 void InitEntityList();
 Entity *NewEntity();
 void FreeEntity(Entity *ent);
@@ -40,10 +41,20 @@ void DrawEntity(Entity *ent);
 void UpdateEntities();
 void UpdateDisplayBar(Entity *player,SPRITE *window);
 
+/*Specific Entity Stuff*/
 Entity *MakePlayer();
 void PlayerThink(Entity *self);
+Entity *SpawnSnake(int x, int y);
+void SnakeThink(Entity *self);
 Entity *MakeTile(int x, int y, int w, int h);
 Entity *MakeColumn(int x, int y, int w, int h);
 
+/*Keyboard Inputs*/
+void InitKeyboard();
+void ClearKeyboard();
+void UpdateKeyboard();
+int isKeyPressed(int key);
+int isKeyReleased(int key);
+int isKeyHeld(int key);
 
 #endif

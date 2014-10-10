@@ -13,6 +13,8 @@ void RenderLevel(int level)
 		MakeTile(640, 600, 320, 32);
 		MakeTile(960, 600, 320, 32);
 		MakeColumn(400, 600-64, 64, 64);
+		MakeColumn(800, 600-64, 64, 64);
+		SpawnSnake(600, 600-32);
 	}
 }
 

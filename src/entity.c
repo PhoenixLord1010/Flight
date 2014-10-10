@@ -5,10 +5,15 @@
 extern SDL_Surface *screen;
 Entity EntityList[MAXENTITIES];
 Entity *Player;
+int gravity = 13;
 int NumLives = 3;
 int NumEnts;
 int MOUSEMOVE = 1;
 int lastx, lasty;
+
+int KeyCount;
+Uint8 *oldkeys; /*last frame's key presses*/
+Uint8 *keys;    /*current frame's key presses*/
 
 
 void DrawEntities()
@@ -148,7 +153,7 @@ Entity *MakePlayer()
 	Entity *player;
 	player = NewEntity();
 	if(player == NULL)return player;
-	player->sprite = LoadSprite("images/player.png",32,48,-1,-1,-1);
+	player->sprite = LoadSprite("images/player.png",34,48,-1,-1,-1);
 	player->bbox.x = 6;
 	player->bbox.y = 0;
 	player->bbox.w = 22;
@@ -159,9 +164,10 @@ Entity *MakePlayer()
 	player->shown = 1;
 	player->delay = 1;
 	player->state = ST_IDLE;
+	player->isRight = 1;
 	player->think = PlayerThink;
-	player->health = 30;
-	player->healthmax = 30;
+	player->health = 10;
+	player->healthmax = 10;
 	player->owner = player;
 	Player = player;
 	return player;
@@ -169,21 +175,21 @@ Entity *MakePlayer()
 
 void PlayerThink(Entity *self)
 {
-	int numkeys;
-	Uint8 *keys = SDL_GetKeyState(&numkeys);
 	SDL_Rect b1, xCol, yCol;
 	int uCheck, dCheck, lCheck, rCheck;
-
-	b1.x = Player->sx + Player->bbox.x;
-	b1.y = Player->sy + Player->bbox.y + Player->vy/1.5;
-	b1.w = Player->bbox.w;
-	b1.h = Player->bbox.h;
+	
+	/*Check for Collisions*/
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y + self->vy/1.5;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
 	CheckCollisions(b1, &uCheck, &dCheck, &lCheck, &rCheck, &xCol, &yCol);
+
+	if(!self->isRight)self->frame -= 8;
 
 	if(self->health > 0)
 	{
-		
-		if(self->vx != 0)	/*decelerates x movement when nothing's pressed*/
+		if(self->vx != 0)	/*Decelerates X Movement When Nothing's Pressed*/
 		{
 			if(self->vx > 0)
 			{
@@ -198,10 +204,11 @@ void PlayerThink(Entity *self)
 				else self->vx = 0;
 			}
 		}
-		
-		if(self->vy <= 13 && !uCheck)	/*gravity*/
+
+		if(self->vy <= gravity && !uCheck)	/*Gravity*/
 			self->vy += 2;
 
+		/*What to Do if Colliding*/
 		if(uCheck)
 		{
 			self->vy = 0;
@@ -221,6 +228,7 @@ void PlayerThink(Entity *self)
 			self->sx = xCol.x + xCol.w;
 		}
 		
+
 		self->sx += self->vx;
 		self->sy += self->vy;
 
@@ -234,29 +242,39 @@ void PlayerThink(Entity *self)
 		self->vx = 0;
 		self->vy = 0;
 		self->state = ST_DEAD;
-		self->frame = 8;
+		self->frame = 16;
 	}
 	
-	if(keys[SDLK_a] && !rCheck && self->sx > 0)		/*Move left*/
+	if(isKeyHeld(SDLK_a) && !rCheck && self->sx > 0)	/*Move left*/
 	{
+		self->isRight = 0;
 		if(self->vx > -10)self->vx -= 5;
 		if(uCheck)self->state = ST_WALK;
 	}
-	if(keys[SDLK_d] && !lCheck)						/*Move right*/
+	if(isKeyHeld(SDLK_d) && !lCheck)					/*Move right*/
 	{
+		self->isRight = 1;
 		if(self->vx < 10)self->vx += 5;
 		if(uCheck)self->state = ST_WALK;
 	}
 
-	if(keys[SDLK_SPACE] && self->vy >= 0)			/*Jump*/
+	if(isKeyPressed(SDLK_SPACE) && self->vy >= 0 && self->state != ST_JUMP2)	/*Jumps*/
 	{
-		self->vy = -20;
-		self->state = ST_JUMP;
-		self->frame = 4;
+		if(self->state == ST_JUMP2)self->vy = -30;
+		else self->vy = -20;
+		if(self->state == ST_JUMP1)self->state = ST_JUMP2;
+		else
+		{
+			self->state = ST_JUMP1;
+			self->frame = 4;
+		}
 		uCheck = 0;
 	}
 
-	switch(self->state)
+	if(isKeyHeld(SDLK_SPACE) && self->vy > 0)gravity = 1.5;		/*Float*/
+	else gravity = 13;
+
+	switch(self->state)		/*Animations*/
 	{
 		case ST_DEAD:
 			exit(1);
@@ -274,7 +292,21 @@ void PlayerThink(Entity *self)
 			}
 			else self->delay--;
 			break;
-		case ST_JUMP:
+		case ST_JUMP1:
+			if(self->delay <= 0)
+			{
+				self->delay = 7;
+				switch(self->frame)
+				{
+					case 4: self->frame = 5;
+						break;
+					case 5: self->frame = 4;
+						break;
+				}
+			}
+			else self->delay--;
+			break;
+		case ST_JUMP2:
 			if(self->delay <= 0)
 			{
 				self->delay = 3;
@@ -284,16 +316,118 @@ void PlayerThink(Entity *self)
 						break;
 					case 5: self->frame = 4;
 						break;
-					case 6: self->frame = 7;
+				}
+			}
+			else self->delay--;
+			break;
+	}
+
+	if(!self->isRight)self->frame += 8;		/*Face left*/
+}
+
+
+Entity *SpawnSnake(int x, int y)
+{
+	Entity *enemy;
+	enemy = NewEntity();
+	if(enemy == NULL)return enemy;
+	enemy->sprite = LoadSprite("images/snake.png",20,32,-1,-1,-1);
+	enemy->bbox.x = 2;
+	enemy->bbox.y = 0;
+	enemy->bbox.w = 16;
+	enemy->bbox.h = 32;
+	enemy->frame = 0;
+	enemy->sx = x;
+	enemy->sy = y;
+	enemy->vx = -3;
+	enemy->vy = 0;
+	enemy->shown = 1;
+	enemy->delay = 1;
+	enemy->health = 1;
+	enemy->healthmax = 1;
+	enemy->state = ST_ENEMY;
+	enemy->isRight = 0;
+	enemy->think = SnakeThink;
+	enemy->owner = NULL;
+	return enemy;
+}
+
+void SnakeThink(Entity *self)
+{
+	SDL_Rect b1, xCol, yCol;
+	int uCheck, dCheck, lCheck, rCheck;
+	
+	/*Check for Collisions*/
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y + self->vy/1.5;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	CheckCollisions(b1, &uCheck, &dCheck, &lCheck, &rCheck, &xCol, &yCol);
+
+	if(self->isRight)self->frame -= 3;
+
+	if(self->health > 0)
+	{
+		if(self->vy <= gravity && !uCheck)	/*Gravity*/
+			self->vy += 2;
+
+		/*What to Do if Colliding*/
+		if(uCheck)
+		{
+			self->vy = 0;
+			self->sy = yCol.y - self->bbox.h;
+		}
+		if(lCheck)
+		{
+			self->vx = -1 * abs(self->vx);
+		}
+		if(rCheck)
+		{
+			self->vx = abs(self->vx);
+		}
+		
+		if(self->vx < 0)		/*Move left*/
+			self->isRight = 0;
+		if(self->vx >0)			/*Move right*/
+			self->isRight = 1;
+
+		self->sx += self->vx;
+		self->sy += self->vy;
+	}
+
+	if((self->health <= 0) && (self->state != ST_DEAD))	/*It died*/
+	{
+		self->health = 0;
+		self->vx = 0;
+		self->vy = 0;
+		self->state = ST_DEAD;
+		self->frame = 2;
+	}
+
+	switch(self->state)		/*Animations*/
+	{
+		case ST_DEAD:
+			FreeEntity(self);
+			break;
+		case ST_ENEMY:
+			if(self->delay <= 0)
+			{
+				self->delay = 3;
+				switch(self->frame)
+				{
+					case 0: self->frame = 1;
 						break;
-					case 7: self->frame = 6;
+					case 1: self->frame = 0;
 						break;
 				}
 			}
 			else self->delay--;
 			break;
 	}
+
+	if(self->isRight)self->frame += 3;		/*Face right*/
 }
+
 
 Entity *MakeTile(int x, int y, int w, int h)
 {
@@ -327,4 +461,74 @@ Entity *MakeColumn(int x, int y, int w, int h)
 	column->bbox.h = h;
 	column->state = ST_TILE;
 	return column;
+}
+
+
+void InitKeyboard()
+{
+  keys = SDL_GetKeyState(&KeyCount);
+  oldkeys = (Uint8 *)malloc(sizeof(Uint8)*KeyCount);
+  if(oldkeys == NULL)
+  {
+    fprintf(stderr,"unable to initialize keyboard structure!\n");
+  }
+}
+
+void ClearKeyboard()
+{
+  if(oldkeys == NULL)return;
+  memset(oldkeys,0,sizeof(Uint8)*KeyCount);
+}
+
+void UpdateKeyboard()
+{
+  int i;
+  if((oldkeys == NULL)||(keys == NULL))
+  {
+    return;
+  }
+  for(i = 0; i < KeyCount;i++)
+  {
+    oldkeys[i] = keys[i];
+  }
+  keys = SDL_GetKeyState(NULL);
+}
+
+int isKeyPressed(int key)
+{
+  if((oldkeys == NULL)||(keys == NULL))
+  {
+    return 0;
+  }
+  if((keys[key]) && (!oldkeys[key]))
+  {
+    return 1;
+  }
+  return 0;
+}
+
+int isKeyReleased(int key)
+{
+  if((oldkeys == NULL)||(keys == NULL))
+  {
+    return 0;
+  }
+  if((!keys[key]) && (oldkeys[key]))
+  {
+    return 1;
+  }
+  return 0;
+}
+
+int isKeyHeld(int key)
+{
+  if((oldkeys == NULL)||(keys == NULL))
+  {
+    return 0;
+  }
+  if((keys[key]) && (oldkeys[key]))
+  {
+    return 1;
+  }
+  return 0;
 }

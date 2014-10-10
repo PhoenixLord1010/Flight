@@ -11,7 +11,6 @@ extern SDL_Rect Camera;
 
 void Init_All();
 
-
 int main(int argc, char *argv[])
 {
 	int done;
@@ -30,6 +29,7 @@ int main(int argc, char *argv[])
 		ResetBuffer();
 		DrawEntities();
 		NextFrame();
+		UpdateKeyboard();
 		SDL_PumpEvents();
 		keys = SDL_GetKeyState(&keyn);
 		if(keys[SDLK_ESCAPE])done = 1;
@@ -50,5 +50,6 @@ void Init_All()
 	Init_Graphics();
 	InitSpriteList();
 	InitEntityList();
+	InitKeyboard();
 	atexit(CleanUpAll);
 }
