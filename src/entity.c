@@ -10,6 +10,7 @@ int NumLives = 3;
 int NumEnts;
 int MOUSEMOVE = 1;
 int lastx, lasty;
+int uCheck2 = 0;
 
 int KeyCount;
 Uint8 *oldkeys; /*last frame's key presses*/
@@ -153,7 +154,7 @@ Entity *MakePlayer()
 	Entity *player;
 	player = NewEntity();
 	if(player == NULL)return player;
-	player->sprite = LoadSprite("images/player.png",34,48,-1,-1,-1);
+	player->sprite = LoadSprite("images/player.png",34,48);
 	player->bbox.x = 6;
 	player->bbox.y = 0;
 	player->bbox.w = 22;
@@ -168,6 +169,7 @@ Entity *MakePlayer()
 	player->think = PlayerThink;
 	player->health = 10;
 	player->healthmax = 10;
+	player->invuln = 0;
 	player->owner = player;
 	Player = player;
 	return player;
@@ -185,7 +187,7 @@ void PlayerThink(Entity *self)
 	b1.h = self->bbox.h;
 	CheckCollisions(b1, &uCheck, &dCheck, &lCheck, &rCheck, &xCol, &yCol);
 
-	if(!self->isRight)self->frame -= 8;
+	if(!self->isRight && self->state != ST_DYING)self->frame -= 8;
 
 	if(self->health > 0)
 	{
@@ -194,13 +196,21 @@ void PlayerThink(Entity *self)
 			if(self->vx > 0)
 			{
 				if(self->vx >= 3)
-					self->vx -= 3;
+				{
+					if(self->invuln == 0)
+						self->vx -= 2.5;
+					else self->vx -= 1;
+				}
 				else self->vx = 0;
 			}
 			else
 			{
 				if(self->vx <= -3)
-					self->vx += 3;
+				{
+					if(self->invuln == 0)
+						self->vx += 2.5;
+					else self->vx += 1;
+				}
 				else self->vx = 0;
 			}
 		}
@@ -234,50 +244,82 @@ void PlayerThink(Entity *self)
 
 		if((self->vx == 0) && (self->vy == 0) && uCheck)
 			self->state = ST_IDLE;
-	}
 
-	if((self->health <= 0) && (self->state != ST_DEAD))	/*You died*/
-	{
-		self->health = 0;
-		self->vx = 0;
-		self->vy = 0;
-		self->state = ST_DEAD;
-		self->frame = 16;
-	}
-	
-	if(isKeyHeld(SDLK_a) && !rCheck && self->sx > 0)	/*Move left*/
-	{
-		self->isRight = 0;
-		if(self->vx > -10)self->vx -= 5;
-		if(uCheck)self->state = ST_WALK;
-	}
-	if(isKeyHeld(SDLK_d) && !lCheck)					/*Move right*/
-	{
-		self->isRight = 1;
-		if(self->vx < 10)self->vx += 5;
-		if(uCheck)self->state = ST_WALK;
-	}
-
-	if(isKeyPressed(SDLK_SPACE) && self->vy >= 0 && self->state != ST_JUMP2)	/*Jumps*/
-	{
-		if(self->state == ST_JUMP2)self->vy = -30;
-		else self->vy = -20;
-		if(self->state == ST_JUMP1)self->state = ST_JUMP2;
-		else
+		if(uCheck2 && !uCheck)
 		{
 			self->state = ST_JUMP1;
 			self->frame = 4;
 		}
-		uCheck = 0;
+
+		/*Player Inputs*/
+		if(self->invuln <= 15)
+		{
+			if(isKeyHeld(SDLK_a) && !rCheck && self->sx > 0)	/*Move left*/
+			{
+				self->isRight = 0;
+				if(self->vx > -10)self->vx -= 5;
+				if(uCheck)self->state = ST_WALK;
+			}
+			if(isKeyHeld(SDLK_d) && !lCheck)					/*Move right*/
+			{
+				self->isRight = 1;
+				if(self->vx < 10)self->vx += 5;
+				if(uCheck)self->state = ST_WALK;
+			}
+
+			if(isKeyPressed(SDLK_SPACE) && self->vy >= 0 && self->state != ST_JUMP2)	/*Jumps*/
+			{
+				if(self->state == ST_JUMP2)self->vy = -30;
+				else self->vy = -20;
+				if(self->state == ST_JUMP1)self->state = ST_JUMP2;
+				else
+				{
+					self->state = ST_JUMP1;
+					self->frame = 4;
+				}
+				uCheck = 0;
+			}
+		
+			if(isKeyHeld(SDLK_SPACE) && self->vy > 0)gravity = 1.5;		/*Float*/
+			else gravity = 13;
+		}
+
+		uCheck2 = uCheck;
 	}
 
-	if(isKeyHeld(SDLK_SPACE) && self->vy > 0)gravity = 1.5;		/*Float*/
-	else gravity = 13;
+	if((self->health <= 0) && (self->state != ST_DYING))		/*You died*/
+	{
+		self->health = 0;
+		self->vx = 0;
+		self->vy = 0;
+		self->state = ST_DYING;
+		self->frame = 16;
+		self->delay = 15;
+	}
+	
+	if(self->sy >= 800)self->state = ST_DEAD;	/*How you actually die*/
+	
 
 	switch(self->state)		/*Animations*/
 	{
 		case ST_DEAD:
 			exit(1);
+			break;
+		case ST_DYING:
+			if(self->delay <= 0)
+			{
+				if(self->delay == 0)
+				{
+					self->vy = -20;
+					self->delay--;
+				}
+				else
+				{
+					self->vy += 2;
+					self->sy += self->vy;
+				}
+			}
+			else self->delay--;
 			break;
 		case ST_IDLE:
 			self->frame = 0;
@@ -322,7 +364,8 @@ void PlayerThink(Entity *self)
 			break;
 	}
 
-	if(!self->isRight)self->frame += 8;		/*Face left*/
+	if(!self->isRight && self->state != ST_DYING)self->frame += 8;		/*Face left*/
+	if(self->invuln > 0)self->invuln--;		/*Invulnerability counter*/
 }
 
 
@@ -331,7 +374,7 @@ Entity *SpawnSnake(int x, int y)
 	Entity *enemy;
 	enemy = NewEntity();
 	if(enemy == NULL)return enemy;
-	enemy->sprite = LoadSprite("images/snake.png",20,32,-1,-1,-1);
+	enemy->sprite = LoadSprite("images/snake.png",20,32);
 	enemy->bbox.x = 2;
 	enemy->bbox.y = 0;
 	enemy->bbox.w = 16;
@@ -354,7 +397,7 @@ Entity *SpawnSnake(int x, int y)
 
 void SnakeThink(Entity *self)
 {
-	SDL_Rect b1, xCol, yCol;
+	SDL_Rect b1, b2, xCol, yCol;
 	int uCheck, dCheck, lCheck, rCheck;
 	
 	/*Check for Collisions*/
@@ -362,6 +405,10 @@ void SnakeThink(Entity *self)
 	b1.y = self->sy + self->bbox.y + self->vy/1.5;
 	b1.w = self->bbox.w;
 	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
 	CheckCollisions(b1, &uCheck, &dCheck, &lCheck, &rCheck, &xCol, &yCol);
 
 	if(self->isRight)self->frame -= 3;
@@ -393,6 +440,16 @@ void SnakeThink(Entity *self)
 
 		self->sx += self->vx;
 		self->sy += self->vy;
+
+		if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0)	/*Check for Player Collision*/
+		{
+			Player->health -= 1;
+			Player->vy = -15;
+			if((Player->sx + Player->bbox.x + (Player->bbox.w / 2)) < (self->sx + self->bbox.x + (self->bbox.w / 2)))
+				Player->vx = -15;
+			else Player->vx = 15;
+			Player->invuln = 30;
+		}
 	}
 
 	if((self->health <= 0) && (self->state != ST_DEAD))	/*It died*/
@@ -434,7 +491,7 @@ Entity *MakeTile(int x, int y, int w, int h)
 	Entity *tile;
 	tile = NewEntity();
 	if(tile == NULL)return tile;
-	tile->sprite = LoadSprite("images/tile.png", w, h, -1, -1, -1);
+	tile->sprite = LoadSprite("images/tile.png", w, h);
 	tile->shown = 1;
 	tile->sx = x;
 	tile->sy = y;
@@ -446,12 +503,13 @@ Entity *MakeTile(int x, int y, int w, int h)
 	return tile;
 }
 
-Entity *MakeColumn(int x, int y, int w, int h)
+Entity *MakeColumn(int x, int y, int w, int h, int size)
 {
 	Entity *column;
 	column = NewEntity();
 	if(column == NULL)return column;
-	column->sprite = LoadSprite("images/small_column.png", w, h, -1, -1, -1);
+	if(size == 1)column->sprite = LoadSprite("images/small_column.png", w, h);
+	if(size == 2)column->sprite = LoadSprite("images/big_column.png", w, h);
 	column->shown = 1;
 	column->sx = x;
 	column->sy = y;

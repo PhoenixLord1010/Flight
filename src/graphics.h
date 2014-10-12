@@ -11,15 +11,18 @@ enum colors {Red = 1,Green = 2,Blue = 3,Yellow = 4,Orange = 5,Violet = 6,Brown =
                LightGreen = 18,LightBlue = 19,LightYellow = 20,LightOrange = 21,LightViolet = 22,LightBrown = 23,LightGrey = 24,
                Black = 25,White = 26,Tan = 27,Gold = 28,Silver = 29,YellowGreen = 30,Cyan = 31,Magenta = 32};
 
+enum FONTS {F_Small, F_Medium, F_Large};
+
 typedef struct Sprite_T
 {
 	SDL_Surface *image;
 	char filename[20];
 	int w,h;
 	int framesperline;
+	int numframes;
 	int color1,color2,color3;
 	int used;
-}SPRITE;
+}Sprite;
 
 typedef struct
 {
@@ -27,9 +30,9 @@ typedef struct
 }ScreenData;
 
 /*Basics*/
-void Init_Graphics();
+void Init_Graphics(int windowed);
 void DrawPixel(SDL_Surface *screen, Uint8 R, Uint8 G, Uint8 B, int x, int y);
-void DrawLine(SDL_Surface *screen,Uint32 color,int sx,int sy,int gx,int gy);
+void DrawSquareLine(SDL_Surface *screen,Uint32 color,int sx,int sy,int gx,int gy);
 void ShowImage(SDL_Surface *image, SDL_Surface *screen, int x, int y);
 Uint32 getpixel(SDL_Surface *surface, int x, int y);
 void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
@@ -38,14 +41,14 @@ void DrawRect(int sx,int sy, int sw, int sh, Uint32 Color, SDL_Surface *surface)
 
 /*Sprite Functions*/
 void InitSpriteList();
-void FreeSprite(SPRITE *img);
-SPRITE *LoadSprite(char *filename, int sizex, int sizey, int c1, int c2, int c3);
-void DrawSprite(SPRITE *sprite, SDL_Surface *surface, int sx, int sy, int frame);
-void DrawSpritePixel(SPRITE *sprite, SDL_Surface *surface, int sx, int sy, int frame);
+void FreeSprite(Sprite *img);
+Sprite *LoadSprite(char *filename, int sizex, int sizey);
+void DrawSprite(Sprite *sprite, SDL_Surface *surface, int sx, int sy, int frame);
+void DrawSpritePixel(Sprite *sprite, SDL_Surface *surface, int sx, int sy, int frame);
 void CloseSprites();
 
 /*Palette Swapping Functions*/
-SPRITE *LoadSwappedSprite(char *filename,int sizex, int sizey, int c1, int c2, int c3);
+Sprite *LoadSwappedSprite(char *filename,int sizex, int sizey, int c1, int c2, int c3);
 Uint32 SetColor(Uint32 color, int newcolor1,int newcolor2, int newcolor3);
 void SwapSprite(SDL_Surface *sprite,int color1,int color2,int color3);
 Uint32 IndexColor(int color);
@@ -56,12 +59,22 @@ void FrameDelay(Uint32 delay);
 void ResetBuffer();
 void NextFrame();
 
+/*Font Stuff*/
+void LoadFonts();
+void LoadFont(char filename[40],int ptsize,int type);
+void DrawText(char *text,SDL_Surface *surface,int sx,int sy,Uint32 color,int size);
+void DrawTextCentered(char *text,SDL_Surface *surface,int sx,int sy,Uint32 color,int size);
+void DrawTextBlock(char *thetext,SDL_Surface *surface,int sx, int sy,Uint32 color,int size,int width);
+void DrawMessages();
+void InitMessages();
+void NewMessage(char *text,Uint32 color);
+
 /*
 void ShowBMP(SDL_Surface *image, SDL_Surface *screen, int x, int y);
-void DrawWindow(SPRITE *sprite, SDL_Surface *surface);
+void DrawWindow(Sprite *sprite, SDL_Surface *surface);
 void PaintWindow(SDL_Surface *buffer, int x, int y, int w, int h, Uint32 color);
-SPRITE *NewWindow(int sx, int sy, int sw, int sh, int bgcolor);
-SPRITE *DisplayBar();
+Sprite *NewWindow(int sx, int sy, int sw, int sh, int bgcolor);
+Sprite *DisplayBar();
 void InitMouse();
 void DrawMouse();
 */
