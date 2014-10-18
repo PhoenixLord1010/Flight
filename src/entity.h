@@ -19,12 +19,12 @@ typedef struct ENTITY_T
 	int frame;
 	int count;
 	int state;
-	int sx,sy;
+	int sx,sy;			/*Position*/
 	int animframe;
 	int isRight;
 	int busy;
 	int delay;
-	float vx,vy;
+	float vx,vy;		/*Velocity*/
 	int framestates[MAXSTATES];
 	SDL_Rect bbox;
 	int health;

@@ -167,6 +167,7 @@ Entity *MakePlayer()
 	player->sy = screen->h/1.5;
 	player->shown = 1;
 	player->delay = 1;
+	player->busy = 0;
 	player->state = ST_IDLE;
 	player->isRight = 1;
 	player->think = PlayerThink;
@@ -267,13 +268,13 @@ void PlayerThink(Entity *self)
 		{
 			if(isKeyHeld(SDLK_a) && !rCheck && self->sx > 0)	/*Move left*/
 			{
-				self->isRight = 0;
+				if(self->busy <= 0)self->isRight = 0;
 				if(self->vx > -10)self->vx -= 5;
 				if(uCheck)self->state = ST_WALK;
 			}
 			if(isKeyHeld(SDLK_d) && !lCheck)					/*Move right*/
 			{
-				self->isRight = 1;
+				if(self->busy <= 0)self->isRight = 1;
 				if(self->vx < 10)self->vx += 5;
 				if(uCheck)self->state = ST_WALK;
 			}
@@ -296,64 +297,79 @@ void PlayerThink(Entity *self)
 
 
 			/*Directional Attack*/
-			if(isKeyPressed(SDLK_KP6) || isKeyPressed(SDLK_KP5))	/*Right*/
+			if((isKeyPressed(SDLK_KP6) || isKeyPressed(SDLK_KP5)) && self->busy <= 0)	/*Right*/
 			{
 				sBox.x = 68;
 				sBox.y = 38;
 				sFrame = 0;
 				MakeSpear(sBox, sFrame);
+				self->isRight = 1;
+				self->busy = 15;
 			}
-			if(isKeyPressed(SDLK_KP9))	/*Up-Right*/
+			if(isKeyPressed(SDLK_KP9) && self->busy <= 0)	/*Up-Right*/
 			{
 				sBox.x = 60;
 				sBox.y = 12;
 				sFrame = 1;
 				MakeSpear(sBox, sFrame);
+				self->isRight = 1;
+				self->busy = 15;
 			}
-			if(isKeyPressed(SDLK_KP3))	/*Down-Right*/
+			if(isKeyPressed(SDLK_KP3) && self->busy <= 0)	/*Down-Right*/
 			{
 				sBox.x = 60;
 				sBox.y = 64;
 				sFrame = 2;
 				MakeSpear(sBox, sFrame);
+				self->isRight = 1;
+				self->busy = 15;
 			}
-			if(isKeyPressed(SDLK_KP4))	/*Left*/
+			if(isKeyPressed(SDLK_KP4) && self->busy <= 0)	/*Left*/
 			{
 				sBox.x = 0;
 				sBox.y = 38;
 				sFrame = 3;
 				MakeSpear(sBox, sFrame);
+				self->isRight = 0;
+				self->busy = 15;
 			}
-			if(isKeyPressed(SDLK_KP7))	/*Up-Left*/
+			if(isKeyPressed(SDLK_KP7) && self->busy <= 0)	/*Up-Left*/
 			{
 				sBox.x = 8;
 				sBox.y = 12;
 				sFrame = 4;
 				MakeSpear(sBox, sFrame);
+				self->isRight = 0;
+				self->busy = 15;
 			}
-			if(isKeyPressed(SDLK_KP1))	/*Down-Left*/
+			if(isKeyPressed(SDLK_KP1) && self->busy <= 0)	/*Down-Left*/
 			{
 				sBox.x = 8;
 				sBox.y = 64;
 				sFrame = 5;
 				MakeSpear(sBox, sFrame);
+				self->isRight = 0;
+				self->busy = 15;
 			}
-			if(isKeyPressed(SDLK_KP8))	/*Up*/
+			if(isKeyPressed(SDLK_KP8) && self->busy <= 0)	/*Up*/
 			{
 				sBox.x = 34;
 				sBox.y = 0;
 				sFrame = 6;
 				MakeSpear(sBox, sFrame);
+				self->busy = 15;
 			}
-			if(isKeyPressed(SDLK_KP2))	/*Down*/
+			if(isKeyPressed(SDLK_KP2) && self->busy <= 0)	/*Down*/
 			{
 				sBox.x = 34;
 				sBox.y = 76;
 				sFrame = 7;
 				MakeSpear(sBox, sFrame);
+				self->busy = 15;
 			}				
 		}
 
+		if(self->busy >= 0)self->busy--;
 		uCheck2 = uCheck;
 	}
 
