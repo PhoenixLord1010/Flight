@@ -8,13 +8,15 @@ void RenderLevel(int level)
 {
 	if(level == 0)
 	{
-		MakeTile(0, 600, 320, 32);
-		MakeTile(320, 600, 320, 32);
-		MakeTile(640, 600, 320, 32);
-		MakeTile(960, 600, 320, 32);
-		MakeColumn(400, 600-64, 64, 64, 1);
-		MakeColumn(800, 600-128, 64, 128, 2);
+		BuildTile(0, 600, 320, 32);
+		BuildTile(320, 600, 320, 32);
+		BuildTile(640, 600, 320, 32);
+		BuildTile(960, 600, 320, 32);
+		BuildColumn(400, 600-64, 64, 64, 1);
+		BuildColumn(800, 600-128, 64, 128, 2);
 		SpawnSnake(600, 600-32);
+		SpawnSnake(710, 600-32);
+		SpawnSnake(820, 600-160);
 	}
 }
 
