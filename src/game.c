@@ -28,6 +28,9 @@ int main(int argc, char *argv[])
 	RenderLevel(0);
 	do
 	{	
+		if(player->sx >= (screen->w * 0.6) + screen->offset)screen->offset += player->sx - ((screen->w * 0.6) + screen->offset);
+		//if(player->sx <= (screen->w * 0.2) + screen->offset && screen->offset > 100)screen->offset -= ((screen->w * 0.2) + screen->offset) - player->sx;
+		
 		ResetBuffer();
 		SDL_PumpEvents();
 

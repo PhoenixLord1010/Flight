@@ -4,6 +4,7 @@
 #include "entity.h"
 
 extern SDL_Surface *screen;
+extern SDL_Rect Camera;
 Entity EntityList[MAXENTITIES];
 Entity *Player;
 int gravity = 13;
@@ -251,7 +252,8 @@ void PlayerThink(Entity *self)
 		{
 			self->sx = xCol.x + xCol.w;
 		}
-		
+		if(self->sx < screen->offset)self->sx = screen->offset;
+
 
 		self->sx += self->vx;
 		self->sy += self->vy;
@@ -271,17 +273,17 @@ void PlayerThink(Entity *self)
 		/*Player Inputs*/
 		if(self->invuln <= 15)
 		{
-			if(isKeyHeld(SDLK_a) && !rCheck && self->sx > 0)	/*Move left*/
+			if(isKeyHeld(SDLK_a) && !rCheck)					/*Move left*/
 			{
 				if(self->busy <= 0)self->isRight = 0;
-				if(self->vx > -10)self->vx -= 5;
-				if(uCheck)self->state = ST_WALK;
+				if(self->vx > -8)self->vx -= 4;
+				if(uCheck && self->state != ST_DASH)self->state = ST_WALK;
 			}
 			if(isKeyHeld(SDLK_d) && !lCheck)					/*Move right*/
 			{
 				if(self->busy <= 0)self->isRight = 1;
-				if(self->vx < 10)self->vx += 5;
-				if(uCheck)self->state = ST_WALK;
+				if(self->vx < 8)self->vx += 4;
+				if(uCheck && self->state != ST_DASH)self->state = ST_WALK;
 			}
 
 			if(isKeyPressed(SDLK_KP0) && self->vy >= 0 && self->state != ST_JUMP2)	/*Jumps*/
@@ -490,6 +492,7 @@ void PlayerThink(Entity *self)
 			}
 			else self->delay--;
 			uCheck = 1;
+			if(self->busy == 1)self->state = ST_IDLE;
 			break;
 	}
 
@@ -731,19 +734,19 @@ void EyeThink(Entity *self)
 }
 
 
-Entity *BuildTile(int x, int y, int w, int h)
+Entity *BuildTile(int x, int y)
 {
 	Entity *tile;
 	tile = NewEntity();
 	if(tile == NULL)return tile;
-	tile->sprite = LoadSprite("images/tile.png", w, h);
+	tile->sprite = LoadSprite("images/tile.png", 320, 32);
 	tile->shown = 1;
 	tile->sx = x;
 	tile->sy = y;
 	tile->bbox.x = 0;
 	tile->bbox.y = 0;
-	tile->bbox.w = w;
-	tile->bbox.h = h;
+	tile->bbox.w = 320;
+	tile->bbox.h = 32;
 	tile->state = ST_TILE;
 	return tile;
 }

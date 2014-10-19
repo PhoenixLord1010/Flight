@@ -299,7 +299,7 @@ void DrawSprite(Sprite *sprite, SDL_Surface *surface, int sx, int sy, int frame)
     src.y = frame/sprite->framesperline * sprite->h;
     src.w = sprite->w;
     src.h = sprite->h;
-    dest.x = sx;
+	dest.x = sx - screen->offset;
     dest.y = sy;
     dest.w = sprite->w;
     dest.h = sprite->h;

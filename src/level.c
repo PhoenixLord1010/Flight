@@ -9,10 +9,11 @@ void RenderLevel(int level)
 {
 	if(level == 0)
 	{
-		BuildTile(0, 600, 320, 32);
-		BuildTile(320, 600, 320, 32);
-		BuildTile(640, 600, 320, 32);
-		BuildTile(960, 600, 320, 32);
+		BuildTile(0, 600);
+		BuildTile(320, 600);
+		BuildTile(640, 600);
+		BuildTile(960, 600);
+		BuildTile(1280, 600);
 		BuildColumn(400, 600-64, 64, 64, 1);
 		BuildColumn(800, 600-128, 64, 128, 2);
 		SpawnSnake(600, 600-32);
