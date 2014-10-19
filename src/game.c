@@ -62,6 +62,7 @@ void Update_ALL()
 {
 	UpdateEntities();
 	UpdateKeyboard();
+	UpdateLevel(0);
 }
 
 void Draw_ALL()

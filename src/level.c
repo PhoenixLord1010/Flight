@@ -3,6 +3,7 @@
 
 int CurrentLevel = 0;
 int NumLevels = 2;
+int delay = 30;
 
 void RenderLevel(int level)
 {
@@ -20,6 +21,10 @@ void RenderLevel(int level)
 	}
 }
 
-void UpdateLevel()
+void UpdateLevel(int level)
 {
+	if(delay == 30)SpawnEye(1400, 500);
+	if(delay == 15)SpawnEye(1400, 500);
+	if(delay == 0)SpawnEye(1400, 500);
+	delay--;
 }

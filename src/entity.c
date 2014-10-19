@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include "entity.h"
 
@@ -85,6 +86,7 @@ void FreeEntity(Entity *ent)
 	if(ent->sprite != NULL)FreeSprite(ent->sprite);
 	ent->sprite = NULL;
 	ent->owner = NULL;
+	ent->state = NULL;
 }
 
 void ClearEntities()
@@ -254,13 +256,16 @@ void PlayerThink(Entity *self)
 		self->sx += self->vx;
 		self->sy += self->vy;
 
-		if((self->vx == 0) && (self->vy == 0) && uCheck)
+		if((self->vx == 0) && (self->vy == 0) && uCheck)	/*Standing Still*/
 			self->state = ST_IDLE;
 
-		if(uCheck2 && !uCheck)
+		if(uCheck2 && !uCheck)	/*Walking off Edges*/
 		{
-			self->state = ST_JUMP1;
-			self->frame = 4;
+			if(self->state != ST_DASH)
+			{
+				self->state = ST_JUMP1;
+				self->frame = 4;
+			}
 		}
 
 		/*Player Inputs*/
@@ -366,7 +371,30 @@ void PlayerThink(Entity *self)
 				sFrame = 7;
 				MakeSpear(sBox, sFrame);
 				self->busy = 15;
-			}				
+			}
+
+			if((isKeyPressed(SDLK_KP_PLUS) || isKeyPressed(SDLK_KP_ENTER)) && self->busy <= 0 && uCheck == 1)	/*Dash*/
+			{
+				if(self->isRight)
+				{
+					self->vx = 30;
+					sBox.x = 68;
+					sBox.y = 38;
+					sFrame = 0;
+					MakeSpear(sBox, sFrame);
+				}
+				else 
+				{
+					self->vx = -30;
+					sBox.x = 0;
+					sBox.y = 38;
+					sFrame = 3;
+					MakeSpear(sBox, sFrame);
+				}
+				self->state = ST_DASH;
+				self->frame = 6;
+				self->busy = 15;
+			}
 		}
 
 		if(self->busy >= 0)self->busy--;
@@ -447,6 +475,21 @@ void PlayerThink(Entity *self)
 				}
 			}
 			else self->delay--;
+			break;
+		case ST_DASH:
+			if(self->delay <= 0)
+			{
+				self->delay = 2;
+				switch(self->frame)
+				{
+					case 6: self->frame = 7;
+						break;
+					case 7: self->frame = 6;
+						break;
+				}
+			}
+			else self->delay--;
+			uCheck = 1;
 			break;
 	}
 
@@ -601,6 +644,90 @@ void SnakeThink(Entity *self)
 	}
 
 	if(self->isRight)self->frame += 3;		/*Face right*/
+}
+
+Entity *SpawnEye(int x, int y)
+{
+	Entity *enemy;
+	enemy = NewEntity();
+	if(enemy == NULL)return enemy;
+	enemy->sprite = LoadSprite("images/eye.png",32,32);
+	enemy->bbox.x = 0;
+	enemy->bbox.y = 0;
+	enemy->bbox.w = 32;
+	enemy->bbox.h = 32;
+	enemy->frame = 0;
+	enemy->sx = x;
+	enemy->sy = y;
+	enemy->vx = -4;
+	enemy->vy = 0;
+	enemy->shown = 1;
+	enemy->delay = 1;
+	enemy->health = 1;
+	enemy->healthmax = 1;
+	enemy->state = ST_ENEMY;
+	enemy->isRight = 0;
+	enemy->think = EyeThink;
+	enemy->owner = NULL;
+	return enemy;
+}
+
+void EyeThink(Entity *self)
+{
+	SDL_Rect b1, b2, xCol, yCol;
+	int uCheck, dCheck, lCheck, rCheck;
+	
+	/*Check for Collisions*/
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+	CheckCollisions(self, b1, &uCheck, &dCheck, &lCheck, &rCheck, &xCol, &yCol);
+
+	if(self->health > 0)
+	{	
+		self->vy = 2 * sin(float(self->sx / 100));
+		
+		self->sx += self->vx;
+		self->sy += self->vy;
+
+		if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0)	/*Check for Player Collision*/
+		{
+			Player->health -= 1;
+			Player->vy = -15;
+			if((Player->sx + Player->bbox.x + (Player->bbox.w / 2)) < (self->sx + self->bbox.x + (self->bbox.w / 2)))
+				Player->vx = -15;
+			else Player->vx = 15;
+			Player->invuln = 30;
+		}
+	}
+
+	if((self->health <= 0) && (self->state != ST_DEAD))	/*It died*/
+	{
+		self->health = 0;
+		self->vx = 0;
+		self->vy = -20;
+		self->state = ST_DEAD;
+		self->frame = 1;
+	}
+
+	if(self->sx < -40)FreeEntity(self);	/*Off Screen*/
+
+	switch(self->state)		/*Animations*/
+	{
+		case ST_DEAD:
+			self->vy += 2;
+			self->sy += self->vy;
+			if(self->sy >= 800)FreeEntity(self);
+			break;
+		case ST_ENEMY:
+			self->frame = 0;
+			break;
+	}
 }
 
 
