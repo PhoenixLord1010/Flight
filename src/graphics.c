@@ -179,7 +179,7 @@ void DrawPixel(SDL_Surface *screen, Uint8 R, Uint8 G, Uint8 B, int x, int y)
     SDL_UpdateRect(screen, x, y, 1, 1);
 }
 
-void DrawSquareLine(SDL_Surface *screen, Uint32 color, int sx, int sy, int gx, int gy)
+void DrawSquareLine(SDL_Surface *screen, Uint32 color, float sx, float sy, float gx, float gy)
 {
 	SDL_Rect box;
 	if(sx < gx)box.x = sx;
@@ -233,7 +233,7 @@ void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
   SDL_FillRect(surface,&point,pixel);
 }
 
-void DrawFilledRect(int sx, int sy, int sw, int sh, Uint32 Color, SDL_Surface *surface)
+void DrawFilledRect(float sx, float sy, int sw, int sh, Uint32 Color, SDL_Surface *surface)
 {
 	SDL_Rect dst;
 	dst.x = sx;
@@ -243,7 +243,7 @@ void DrawFilledRect(int sx, int sy, int sw, int sh, Uint32 Color, SDL_Surface *s
 	SDL_FillRect(surface, &dst, Color);
 }
 
-void DrawRect(int sx, int sy, int sw, int sh, Uint32 Color, SDL_Surface *surface)
+void DrawRect(float sx, float sy, int sw, int sh, Uint32 Color, SDL_Surface *surface)
 {
 	SDL_Rect box;
     box.x = sx;
@@ -290,7 +290,7 @@ Sprite *LoadSprite(char *filename, int sizex, int sizey)
 	return LoadSwappedSprite(filename, sizex, sizey, -1, -1, -1);
 }
 
-void DrawSprite(Sprite *sprite, SDL_Surface *surface, int sx, int sy, int frame)
+void DrawSprite(Sprite *sprite, SDL_Surface *surface, float sx, float sy, int frame)
 {
 	SDL_Rect src,dest;
 	if((sprite == NULL)||(surface == NULL))return;
@@ -306,7 +306,7 @@ void DrawSprite(Sprite *sprite, SDL_Surface *surface, int sx, int sy, int frame)
     SDL_BlitSurface(sprite->image, &src, surface, &dest);
 }
 
-void DrawSpritePixel(Sprite *sprite, SDL_Surface *surface, int sx, int sy, int frame)
+void DrawSpritePixel(Sprite *sprite, SDL_Surface *surface, float sx, float sy, int frame)
 {
     SDL_Rect src,dest;
     src.x = frame%sprite->framesperline * sprite->w + sprite->w/2;

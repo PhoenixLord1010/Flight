@@ -32,19 +32,19 @@ typedef struct
 /*Basics*/
 void Init_Graphics(int windowed);
 void DrawPixel(SDL_Surface *screen, Uint8 R, Uint8 G, Uint8 B, int x, int y);
-void DrawSquareLine(SDL_Surface *screen,Uint32 color,int sx,int sy,int gx,int gy);
-void ShowImage(SDL_Surface *image, SDL_Surface *screen, int x, int y);
+void DrawSquareLine(SDL_Surface *screen,Uint32 color,float sx,float sy,float gx,float gy);
+void ShowImage(SDL_Surface *image, SDL_Surface *screen, float x, float y);
 Uint32 getpixel(SDL_Surface *surface, int x, int y);
 void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
-void DrawFilledRect(int sx,int sy, int sw, int sh, Uint32 Color, SDL_Surface *surface);
-void DrawRect(int sx,int sy, int sw, int sh, Uint32 Color, SDL_Surface *surface);
+void DrawFilledRect(float sx, float sy, int sw, int sh, Uint32 Color, SDL_Surface *surface);
+void DrawRect(float sx, float sy, int sw, int sh, Uint32 Color, SDL_Surface *surface);
 
 /*Sprite Functions*/
 void InitSpriteList();
 void FreeSprite(Sprite *img);
 Sprite *LoadSprite(char *filename, int sizex, int sizey);
-void DrawSprite(Sprite *sprite, SDL_Surface *surface, int sx, int sy, int frame);
-void DrawSpritePixel(Sprite *sprite, SDL_Surface *surface, int sx, int sy, int frame);
+void DrawSprite(Sprite *sprite, SDL_Surface *surface, float sx, float sy, int frame);
+void DrawSpritePixel(Sprite *sprite, SDL_Surface *surface, float sx, float sy, int frame);
 void CloseSprites();
 
 /*Palette Swapping Functions*/

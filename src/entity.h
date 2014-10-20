@@ -17,11 +17,11 @@ typedef struct ENTITY_T
 	int shown;
 	int used;
 	int frame;
-	int count;
 	int state;
 	float sx,sy;		/*Position*/
 	int animframe;
 	int isRight;
+	int uCheck, dCheck, lCheck, rCheck;
 	int busy;			/*Attack delay*/
 	int delay;			/*Animation delay*/
 	float vx,vy;		/*Velocity*/
@@ -44,14 +44,16 @@ void UpdateEntities();
 /*Specific Entity Stuff*/
 Entity *MakePlayer();
 void PlayerThink(Entity *self);
-Entity *MakeSpear(SDL_Rect box, int i);
+Entity *MakeSpear();
 void SpearThink(Entity *self);
 Entity *SpawnSnake(int x, int y);
 void SnakeThink(Entity *self);
 Entity *SpawnEye(int x, int y);
 void EyeThink(Entity *self);
-Entity *BuildTile(int x, int y);
-Entity *BuildColumn(int x, int y, int w, int h, int size);
+Entity *BuildTile(int x);
+Entity *BuildPlatform(int x, int y);
+Entity *BuildColumn(int x, int y);
+void TileThink(Entity *self);
 
 /*Keyboard Inputs*/
 void InitKeyboard();
