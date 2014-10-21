@@ -4,6 +4,6 @@
 #include "graphics.h"
 
 void RenderLevel(int CurrentLevel);
-void UpdateLevel(int CurrentLevel);
+void UpdateLevel();
 
 #endif

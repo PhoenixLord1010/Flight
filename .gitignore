@@ -1,5 +1,6 @@
 *.dll
 *.sln
 *.suo
+*.psd
 *.vcxproj*
 Debug/

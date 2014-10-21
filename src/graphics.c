@@ -4,7 +4,7 @@
 #include "entity.h"
 #include "graphics.h"
 
-#define MaxSprites		511
+#define MaxSprites		5110
 #define MaxWindows		64
 
 SDL_Surface *screen;
@@ -20,6 +20,7 @@ Entity *Mouse;
 Uint32 NOW;
 
 int NumSprites;
+float offset;
 //int NumWindows;
 //extern int NumLives;
 //extern Entity EntityList[MAXENTITIES];
@@ -299,7 +300,7 @@ void DrawSprite(Sprite *sprite, SDL_Surface *surface, float sx, float sy, int fr
     src.y = frame/sprite->framesperline * sprite->h;
     src.w = sprite->w;
     src.h = sprite->h;
-	dest.x = sx - screen->offset;
+	dest.x = sx - offset;
     dest.y = sy;
     dest.w = sprite->w;
     dest.h = sprite->h;

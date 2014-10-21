@@ -9,6 +9,7 @@ extern SDL_Surface *screen;
 extern SDL_Surface *bgimage;
 extern SDL_Surface *background;
 extern SDL_Rect Camera;
+extern float offset;
 
 int windowed = 1;
 
@@ -28,18 +29,19 @@ int main(int argc, char *argv[])
 	MakeSpear();
 	do
 	{	
-		if(player->sx >= (screen->w * 0.6) + screen->offset)screen->offset += player->sx - ((screen->w * 0.6) + screen->offset);	/*Scroll Screen with Player*/
-		//if(player->sx <= (screen->w * 0.2) + screen->offset && screen->offset > 100)screen->offset -= ((screen->w * 0.2) + screen->offset) - player->sx;
-		
 		ResetBuffer();
-		SDL_PumpEvents();
+		
+		keys = SDL_GetKeyState(&keyn);
+		if(keys[SDLK_ESCAPE])done = 1;
+
+		if(player->sx >= (screen->w * 0.6) + offset)offset += player->sx - ((screen->w * 0.6) + offset);	/*Scroll Screen with Player*/
+		//if(player->sx <= (screen->w * 0.2) + screen->offset && screen->offset > 100)screen->offset -= ((screen->w * 0.2) + screen->offset) - player->sx;
 
 		Draw_ALL();
 		Update_ALL();
 
 		NextFrame();
-		keys = SDL_GetKeyState(&keyn);
-		if(keys[SDLK_ESCAPE])done = 1;
+		SDL_PumpEvents();
 	}while(!done);
 
 	exit(0);
@@ -65,7 +67,7 @@ void Update_ALL()
 {
 	UpdateEntities();
 	UpdateKeyboard();
-	UpdateLevel(0);
+	UpdateLevel();
 }
 
 void Draw_ALL()

@@ -5,6 +5,8 @@
 
 extern SDL_Surface *screen;
 extern SDL_Rect Camera;
+extern float offset;
+
 Entity EntityList[MAXENTITIES];
 Entity *Player;
 int gravity = 13;
@@ -110,6 +112,17 @@ void ClearEntities()
 	}
 }
 
+void ClearEntitiesExcept(Entity *skip)
+{
+  int i;
+  for(i = 0;i < MAXENTITIES;i++)
+  {
+    if((EntityList[i].used)&&(skip != &EntityList[i]))
+    {
+      FreeEntity(&EntityList[i]);
+    }
+  }
+}
 
 int Collide(SDL_Rect box1, SDL_Rect box2)
 {
@@ -179,7 +192,7 @@ Entity *MakePlayer()
 	player->bbox.h = 48;
 	player->frame = 0;
 	player->sx = 100;
-	player->sy = screen->h/1.5;
+	player->sy = 550;
 	player->shown = 1;
 	player->delay = 1;
 	player->busy = 0;
@@ -197,6 +210,7 @@ Entity *MakePlayer()
 void PlayerThink(Entity *self)
 {
 	/*Collision Stuff*/
+	int i = 0;
 	SDL_Rect b1, xCol, yCol;
 	
 	/*Spear Stuff*/
@@ -205,11 +219,27 @@ void PlayerThink(Entity *self)
 
 	
 	/*Check for Collisions*/
-	b1.x = self->sx + self->bbox.x;
-	b1.y = self->sy + self->bbox.y + self->vy/1.5;
-	b1.w = self->bbox.w;
-	b1.h = self->bbox.h;
-	CheckCollisions(self, b1, &xCol, &yCol);
+	if(self->state == ST_DASH)
+	{
+		do
+		{
+			b1.x = self->sx + self->bbox.x + (self->vx * (i / 60));
+			b1.y = self->sy + self->bbox.y + self->vy/1.5;
+			b1.w = self->bbox.w;
+			b1.h = self->bbox.h;
+			CheckCollisions(self, b1, &xCol, &yCol);
+			i++;
+		}
+		while((i < 61) && (self->lCheck != 1 && self->rCheck != 1));
+	}
+	else 
+	{
+		b1.x = self->sx + self->bbox.x;
+		b1.y = self->sy + self->bbox.y + self->vy/1.5;
+		b1.w = self->bbox.w;
+		b1.h = self->bbox.h;
+		CheckCollisions(self, b1, &xCol, &yCol);
+	}
 
 	if(!self->isRight && self->state != ST_DYING)self->frame -= 8;	/*Direction Calculation*/
 
@@ -257,13 +287,15 @@ void PlayerThink(Entity *self)
 		}
 		if(self->lCheck)
 		{
+			self->vx = 0;
 			self->sx = xCol.x - 32;
 		}
 		if(self->rCheck)
 		{
+			self->vx = 0;
 			self->sx = xCol.x + xCol.w;
 		}
-		if(self->sx < screen->offset)self->sx = screen->offset;
+		if(self->sx < offset)self->sx = offset;
 
 
 		self->sx += self->vx;
@@ -284,15 +316,15 @@ void PlayerThink(Entity *self)
 		/*Player Inputs*/
 		if(self->invuln <= 15)
 		{
-			if(isKeyHeld(SDLK_a) && !self->rCheck)					/*Move left*/
+			if(isKeyHeld(SDLK_e) && !self->rCheck && self->state != ST_DASH)					/*Move left*/
 			{
-				if(self->busy <= 0)self->isRight = 0;
+				if(self->busy <= 7)self->isRight = 0;
 				if(self->vx > -8)self->vx -= 4;
 				if(self->uCheck && self->state != ST_DASH)self->state = ST_WALK;
 			}
-			if(isKeyHeld(SDLK_d) && !self->lCheck)					/*Move right*/
+			if(isKeyHeld(SDLK_t) && !self->lCheck && self->state != ST_DASH)					/*Move right*/
 			{
-				if(self->busy <= 0)self->isRight = 1;
+				if(self->busy <= 7)self->isRight = 1;
 				if(self->vx < 8)self->vx += 4;
 				if(self->uCheck && self->state != ST_DASH)self->state = ST_WALK;
 			}
@@ -314,7 +346,7 @@ void PlayerThink(Entity *self)
 			else gravity = 13;
 		}
 
-		if((isKeyPressed(SDLK_KP6) || isKeyPressed(SDLK_KP5)) && self->busy <= 0)	/*Right*/
+		if(isKeyPressed(SDLK_KP6) && self->busy <= 0)	/*Right*/
 		{
 			self->isRight = 1;
 			self->busy = 15;
@@ -486,7 +518,7 @@ void SpearThink(Entity *self)
 	self->sy = Player->sy - 20;
 
 	/*Directional Attack*/
-	if((isKeyPressed(SDLK_KP6) || isKeyPressed(SDLK_KP5)) && self->busy <= 0)	/*Right*/
+	if(isKeyPressed(SDLK_KP6) && self->busy <= 0)	/*Right*/
 	{
 		self->bbox.x = 68;
 		self->bbox.y = 38;
@@ -584,16 +616,17 @@ void SpearThink(Entity *self)
 		self->busy = 15;
 	}
 
-	if(self->busy >= 0)self->busy--;
-	else 
+	if(self->busy <= 8)
 	{
 		self->shown = 0;
 		self->state = ST_IDLE;
 	}
+	if(self->busy >= 0)self->busy--;
+	
 }
 
 
-Entity *SpawnSnake(int x, int y)
+Entity *SpawnSnake(int x, int y, int i)
 {
 	Entity *snake;
 	snake = NewEntity();
@@ -603,17 +636,18 @@ Entity *SpawnSnake(int x, int y)
 	snake->bbox.y = 0;
 	snake->bbox.w = 16;
 	snake->bbox.h = 32;
-	snake->frame = 0;
+	snake->frame = 0 + (3 * i);
 	snake->sx = x;
 	snake->sy = y;
-	snake->vx = -3;
+	if(i==0)snake->vx = -3;
+	else snake->vx = 3;
 	snake->vy = 0;
 	snake->shown = 1;
 	snake->delay = 1;
 	snake->health = 1;
 	snake->healthmax = 1;
 	snake->state = ST_ENEMY;
-	snake->isRight = 0;
+	snake->isRight = i;
 	snake->think = SnakeThink;
 	snake->owner = NULL;
 	return snake;
@@ -625,7 +659,7 @@ void SnakeThink(Entity *self)
 	
 	/*Check for Collisions*/
 	b1.x = self->sx + self->bbox.x;
-	b1.y = self->sy + self->bbox.y + self->vy/1.5;
+	b1.y = self->sy + self->bbox.y;
 	b1.w = self->bbox.w;
 	b1.h = self->bbox.h;
 	b2.x = Player->sx + Player->bbox.x;
@@ -634,13 +668,8 @@ void SnakeThink(Entity *self)
 	b2.h = Player->bbox.h;
 	CheckCollisions(self, b1, &xCol, &yCol);
 
-	if(self->isRight)self->frame -= 3;
-
 	if(self->health > 0)
 	{
-		if(self->vy <= gravity && !self->uCheck)	/*Gravity*/
-			self->vy += 2;
-
 		/*What to Do if Colliding*/
 		if(self->uCheck)
 		{
@@ -649,17 +678,26 @@ void SnakeThink(Entity *self)
 		}
 		if(self->lCheck)
 		{
-			self->vx = -1 * abs(self->vx);
+			self->isRight = 0;
+			self->frame -= 3;
 		}
 		if(self->rCheck)
 		{
-			self->vx = abs(self->vx);
+			self->isRight = 1;
+			self->frame += 3;
 		}
 		
-		if(self->vx < 0)		/*Move left*/
-			self->isRight = 0;
-		if(self->vx >0)			/*Move right*/
-			self->isRight = 1;
+		if(self->isRight)		/*Move right*/
+			self->vx = 3;
+		else					/*Move left*/
+			self->vx = -3;
+
+		if(self->vy <= 13 && !self->uCheck)	/*Gravity*/
+		{
+			if(self->isRight)self->vx = 2;
+			else self->vx = -2;
+			self->vy += 2;
+		}
 
 		self->sx += self->vx;
 		self->sy += self->vy;
@@ -681,7 +719,7 @@ void SnakeThink(Entity *self)
 		self->vx = 0;
 		self->vy = -20;
 		self->state = ST_DEAD;
-		self->frame = 2;
+		self->frame = 2 + (3 * self->isRight);
 	}
 
 	switch(self->state)		/*Animations*/
@@ -695,11 +733,11 @@ void SnakeThink(Entity *self)
 			if(self->delay <= 0)
 			{
 				self->delay = 3;
-				switch(self->frame)
+				switch(self->frame - (3 * self->isRight))
 				{
-					case 0: self->frame = 1;
+					case 0: self->frame = 1 + (3 * self->isRight);
 						break;
-					case 1: self->frame = 0;
+					case 1: self->frame = 0 + (3 * self->isRight);
 						break;
 				}
 			}
@@ -707,12 +745,10 @@ void SnakeThink(Entity *self)
 			break;
 	}
 
-	if(self->isRight)self->frame += 3;		/*Face right*/
-
-	if(self->sx + self->bbox.w < screen->offset)FreeEntity(self);
+	if(self->sx + self->bbox.w < offset)FreeEntity(self);
 }
 
-Entity *SpawnEye(int x, int y)
+Entity *SpawnEye(int x, int y, int wave)
 {
 	Entity *eye;
 	eye = NewEntity();
@@ -728,7 +764,7 @@ Entity *SpawnEye(int x, int y)
 	eye->vx = -4;
 	eye->vy = 0;
 	eye->shown = 1;
-	eye->delay = 1;
+	eye->delay = 15 * wave;
 	eye->health = 1;
 	eye->healthmax = 1;
 	eye->state = ST_ENEMY;
@@ -753,7 +789,7 @@ void EyeThink(Entity *self)
 	b2.h = Player->bbox.h;
 	CheckCollisions(self, b1, &xCol, &yCol);
 
-	if(self->health > 0)
+	if(self->health > 0 && self->delay <= 0)
 	{	
 		self->vy = 2 * sin(float(self->sx / 100));
 		
@@ -780,7 +816,9 @@ void EyeThink(Entity *self)
 		self->frame = 1;
 	}
 
-	if(self->sx + self->bbox.w < screen->offset)FreeEntity(self);	/*Off Screen*/
+	if(self->delay > 0)self->delay--;
+
+	if(self->sx + self->bbox.w < offset)FreeEntity(self);	/*Off Screen*/
 
 	switch(self->state)		/*Animations*/
 	{
@@ -795,6 +833,46 @@ void EyeThink(Entity *self)
 	}
 }
 
+Entity *BuildSnakePot(int x, int y, int i, int j)
+{
+	Entity *pot;
+	pot = NewEntity();
+	if(pot == NULL)return pot;
+	pot->sprite = LoadSprite("images/snakepot.png", 32, 64);
+	pot->isRight = i;
+	pot->frame = 8 * i;
+	pot->shown = 1;
+	pot->sx = x;
+	pot->sy = y;
+	pot->bbox.x = 0;
+	pot->bbox.y = 32;
+	pot->bbox.w = 32;
+	pot->bbox.h = 32;
+	pot->delay = 0;
+	pot->busy = j;
+	pot->state = ST_TILE;
+	pot->think = PotThink;
+	return pot;
+}
+
+void PotThink(Entity *self)
+{
+	if(self->delay <= 0)
+	{
+		self->delay = 2;
+		if(self->frame < 7 + (8 * self->isRight))
+		{
+			self->frame++;
+		}
+		else
+		{
+			self->frame = 0 + (8 * self->isRight);
+			SpawnSnake(self->sx + 6, self->sy, self->isRight);
+			self->delay = self->busy;
+		}
+	}
+	else self->delay--;
+}
 
 Entity *BuildTile(int x)
 {
@@ -814,22 +892,58 @@ Entity *BuildTile(int x)
 	return tile;
 }
 
+Entity *BuildSmallTile(int x)
+{
+	Entity *tile;
+	tile = NewEntity();
+	if(tile == NULL)return tile;
+	tile->sprite = LoadSprite("images/small_tile.png", 64, 32);
+	tile->shown = 1;
+	tile->sx = x;
+	tile->sy = 600;
+	tile->bbox.x = 0;
+	tile->bbox.y = 0;
+	tile->bbox.w = 64;
+	tile->bbox.h = 32;
+	tile->state = ST_TILE;
+	tile->think = TileThink;
+	return tile;
+}
+
 Entity *BuildPlatform(int x, int y)
 {
 	Entity *plat;
 	plat = NewEntity();
 	if(plat == NULL)return plat;
-	plat->sprite = LoadSprite("images/platform.png", 128, 12);
+	plat->sprite = LoadSprite("images/platform.png", 256, 12);
 	plat->shown = 1;
 	plat->sx = x;
 	plat->sy = y;
 	plat->bbox.x = 0;
 	plat->bbox.y = 0;
-	plat->bbox.w = 128;
+	plat->bbox.w = 256;
 	plat->bbox.h = 12;
 	plat->state = ST_TILE;
 	plat->think = TileThink;
 	return plat;
+}
+
+Entity *BuildWall(int x, int y)
+{
+	Entity *wall;
+	wall = NewEntity();
+	if(wall == NULL)return wall;
+	wall->sprite = LoadSprite("images/wall.png", 24, 256);
+	wall->shown = 1;
+	wall->sx = x;
+	wall->sy = y;
+	wall->bbox.x = 0;
+	wall->bbox.y = 0;
+	wall->bbox.w = 24;
+	wall->bbox.h = 256;
+	wall->state = ST_TILE;
+	wall->think = TileThink;
+	return wall;
 }
 
 Entity *BuildColumn(int x, int y)
@@ -852,7 +966,7 @@ Entity *BuildColumn(int x, int y)
 
 void TileThink(Entity *self)
 {
-	if(self->sx + self->bbox.w < screen->offset)FreeEntity(self);
+	if(self->sx + self->bbox.w < offset)FreeEntity(self);
 }
 
 
