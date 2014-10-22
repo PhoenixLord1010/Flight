@@ -4,26 +4,20 @@
 #include "entity.h"
 #include "graphics.h"
 
-#define MaxSprites		5110
-#define MaxWindows		64
+#define MaxSprites		511
 
 SDL_Surface *screen;
 SDL_Surface *background;
 SDL_Surface *bgimage;
-//SDL_Surface *buffer;
 SDL_Surface *videobuffer;
-TTF_Font *font;
 SDL_Rect Camera;
 Sprite SpriteList[MaxSprites];
-Sprite WindowList[MaxWindows];
-Entity *Mouse;
 Uint32 NOW;
+//Entity *Mouse;
+//TTF_Font *font;
 
 int NumSprites;
 float offset;
-//int NumWindows;
-//extern int NumLives;
-//extern Entity EntityList[MAXENTITIES];
 
 Uint32 rmask,gmask,bmask,amask;
 ScreenData S_Data;
@@ -31,11 +25,12 @@ ScreenData S_Data;
 
 void Init_Graphics(int windowed)
 {
-	Uint32 Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT;
+	Uint32 Vflags =	SDL_ANYFORMAT | SDL_SRCALPHA;		//SDL_FULLSCREEN | SDL_ANYFORMAT;
 	Uint32 HWflag = 0;
 	SDL_Surface *temp;
-	S_Data.xres = 1280; //1600;
-	S_Data.yres = 720; //900;
+	S_Data.xres = 1280;
+	S_Data.yres = 720;
+	if(!windowed)Vflags |= SDL_FULLSCREEN;
 	#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 	rmask = 0xff000000;
 	gmask = 0x00ff0000;
@@ -53,37 +48,37 @@ void Init_Graphics(int windowed)
 		exit(1);
 	}
 	atexit(SDL_Quit);
-	if(SDL_VideoModeOK(1280, 720, 32, SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
+	if(SDL_VideoModeOK(1280, 720, 32, Vflags | SDL_HWSURFACE))		//SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
 	{
 		S_Data.xres = 1280;
 		S_Data.yres = 720;
 		S_Data.depth = 32;
-		Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE;
+		//Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE;
 		HWflag = SDL_HWSURFACE;
 	}
-	else if(SDL_VideoModeOK(1280, 720, 16, SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
+	else if(SDL_VideoModeOK(1280, 720, 16,	Vflags | SDL_HWSURFACE))	//SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
 		 {
 			 S_Data.xres = 1280;
 			 S_Data.yres = 720;
 			 S_Data.depth = 16;
-			 Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE;
+			 //Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE;
 			 HWflag = SDL_HWSURFACE;
 		 }
-		 else if(SDL_VideoModeOK(1280, 720, 16, SDL_FULLSCREEN | SDL_ANYFORMAT))
+		 else if(SDL_VideoModeOK(1280, 720, 16,	Vflags))		//SDL_FULLSCREEN | SDL_ANYFORMAT))
 			  {
 				  S_Data.xres = 1280;
 				  S_Data.yres = 720;
 				  S_Data.depth = 16;
-				  Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT;
+				  //Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT;
 				  HWflag = SDL_SWSURFACE;
 			  }
-	videobuffer = SDL_SetVideoMode(S_Data.xres, S_Data.yres, S_Data.depth, Vflags);
+	videobuffer = SDL_SetVideoMode(S_Data.xres, S_Data.yres, S_Data.depth, Vflags | HWflag);
 	if(videobuffer == NULL)
 	{
 		fprintf(stderr, "Unable to set 1024x600 video: %s\n", SDL_GetError());
 		exit(1);
 	}
-	temp = SDL_CreateRGBSurface(SDL_HWSURFACE, S_Data.xres, S_Data.yres, S_Data.depth, rmask, gmask, bmask, amask);
+	temp = SDL_CreateRGBSurface(HWflag/*SDL_HWSURFACE*/, S_Data.xres, S_Data.yres, S_Data.depth, rmask, gmask, bmask, amask);
 	if(temp == NULL)
 	{
 		fprintf(stderr, "Couldn't initialise background buffer: %s\n", SDL_GetError());
@@ -91,7 +86,7 @@ void Init_Graphics(int windowed)
 	}
 	screen = SDL_DisplayFormat(temp);
 	SDL_FreeSurface(temp);
-	temp = SDL_CreateRGBSurface(Vflags, 2560, 720, S_Data.depth, rmask, gmask, bmask, amask);
+	temp = SDL_CreateRGBSurface(HWflag/*Vflags*/, 2560, 720, S_Data.depth, rmask, gmask, bmask, amask);
 	if(temp == NULL)
 	{
 		fprintf(stderr, "Couldn't initialise background buffer: %s\n", SDL_GetError());
@@ -106,33 +101,16 @@ void Init_Graphics(int windowed)
 	Camera.w = screen->w;
 	Camera.h = screen->h;
 	srand(SDL_GetTicks());
-	
-	if(TTF_Init() == 0)
-		atexit(TTF_Quit);
-	else
-	{
-		fprintf(stderr, "Couldn't initialise True Type Font: %s\n", SDL_GetError());
-		exit(1);
-	}
-	font = TTF_OpenFont("fonts/font1.ttf",14);
-	if(font == NULL)
-	{
-		fprintf(stderr, "Couldn't load font: %s\n", SDL_GetError());
-		exit(1);
-	}
 }
 
 void DrawPixel(SDL_Surface *screen, Uint8 R, Uint8 G, Uint8 B, int x, int y)
 {
 	Uint32 color = SDL_MapRGB(screen->format, R, G, B);
 
-    //if (SDL_MUSTLOCK(screen))
-    //{
-        if (SDL_LockSurface(screen) < 0)
-        {
-            return;
-        }
-    //}
+    if (SDL_LockSurface(screen) < 0)
+    {
+        return;
+    }
     switch (screen->format->BytesPerPixel)
     {
         case 1:
@@ -173,10 +151,7 @@ void DrawPixel(SDL_Surface *screen, Uint8 R, Uint8 G, Uint8 B, int x, int y)
         }
         break;
     }
-    //if (SDL_MUSTLOCK(screen))
-    //{
-        SDL_UnlockSurface(screen);
-    //}
+    SDL_UnlockSurface(screen);
     SDL_UpdateRect(screen, x, y, 1, 1);
 }
 
@@ -267,11 +242,8 @@ void InitSpriteList()
 {
 	int x;
 	NumSprites = 0;
-	//NumWindows = 0;
 	memset(SpriteList, 0, sizeof(Sprite) * MaxSprites);
 	for(x = 0; x < MaxSprites; x++)SpriteList[x].image = NULL;
-	//memset(WindowList, 0, sizeof(Sprite) * MaxWindows);
-	//for(x = 0; x < MaxWindows; x++)WindowList[x].image = NULL;
 }
 
 void FreeSprite(Sprite *sprite)
@@ -328,10 +300,6 @@ void CloseSprites()
 	{
 		FreeSprite(&SpriteList[i]);
 	}
-	//for(i = 0; i < MaxWindows; i++)
-	//{
-	//	FreeSprite(&WindowList[i]);
-	//}
 }
 
 
@@ -721,149 +689,3 @@ void NextFrame()
 	Then = NOW;
 	NOW = SDL_GetTicks();
 }
-
-/*
-Sprite *NewWindow(int sx, int sy, int sw, int sh, int bgcolor)
-{
-	int i;
-	SDL_Surface *temp;
-	if(NumWindows + 1 >= MaxWindows)
-	{
-		fprintf(stderr, "Maximum Windows Reached.\n");
-		exit(1);
-	}
-	NumWindows++;
-	for(i = 0; i <= NumWindows; i++)
-	{
-		if(!WindowList[i].used)break;
-	}
-	temp = SDL_CreateRGBSurface(0, sw, sh, S_Data.depth, rmask, gmask, bmask, amask);
-	WindowList[i].image = SDL_DisplayFormat(temp);
-	SDL_FreeSurface(temp);
-	WindowList[i].w = sw;
-	WindowList[i].h = sh;
-	WindowList[i].color2 = sx;
-	WindowList[i].color3 = sy;
-	WindowList[i].color1 = bgcolor;
-	WindowList[i].used = 1;
-	PaintWindow(WindowList[1].image, 0, 0, sw - 1, sh - 1, bgcolor);
-	return &WindowList[i];
-}
-
-void CloseWindow()
-{
-	int i;
-	for(i = 0; i < MaxWindows; i++)
-	{
-		FreeSprite(&WindowList[i]);
-	}
-}
-
-void DrawWindow(Sprite *sprite, SDL_Surface *surface)
-{
-	SDL_Rect src, dest;
-	src.x = 0;
-	src.y = 0;
-	src.w = sprite->w;
-	src.h = sprite->h;
-	dest.x = sprite->color2;
-	dest.y = sprite->color3;
-	dest.w = sprite->w;
-	dest.h = sprite->h;
-	SDL_BlitSurface(sprite->image, &src, surface, &dest);
-}
-
-Sprite *DisplayBar()
-{
-	Sprite *win;
-	SDL_Surface *txt;
-	SDL_Surface *tmp;
-	SDL_Color c1,c2;
-	SDL_Rect dest;
-	win = NewWindow(0, screen->h - 32, screen->w, 32, SDL_MapRGB(screen->format, 0, 0, 0));
-	c1.r = 240;
-	c1.g = 240;
-	c1.b = 240;
-	c2.r = 1;
-	c2.g = 1;
-	c2.b = 1;
-	dest.x = (screen->w/2) - 46;
-	dest.y = 8;
-	tmp = TTF_RenderText_Shaded(font, "Flight", c1, c2);
-	txt = SDL_DisplayFormat(tmp);
-	SDL_SetColorKey(txt, SDL_SRCCOLORKEY, SDL_MapRGB(txt->format, 0, 0, 0));
-	SDL_FreeSurface(tmp);
-	SDL_BlitSurface(txt, NULL, win->image, &dest);
-	return win;
-}
-
-void UpdateDisplayBar(Entity *player, Sprite *window)
-{
-	int i;
-	SDL_Surface *temp;
-	SDL_Surface *draw;
-	SDL_Rect healthbar;
-	healthbar.x = 130;
-	healthbar.y = 8;
-	healthbar.w = 100;
-	healthbar.h = 16;
-	temp = SDL_CreateRGBSurface(SDL_ANYFORMAT, window->w, window->h, S_Data.depth, rmask, gmask, bmask, amask);
-	if(temp == NULL)
-	{
-		fprintf(stderr, "Couldn't create SDL Surface: %s\n", SDL_GetError());
-		exit(1);
-	}
-	draw = SDL_DisplayFormat(temp);
-	SDL_FreeSurface(temp);
-	SDL_BlitSurface(window->image, NULL, draw, NULL);
-	for(i = 0; i < NumLives; i++)
-		DrawSprite(player->sprite, draw, 5 + (i * player->sprite->w), 1, 0);
-	SDL_FillRect(draw, &healthbar, SDL_MapRGB(screen->format, 255, 0, 0));
-	healthbar.w = (player->health * 100) / player->healthmax;
-	SDL_FillRect(draw, &healthbar, SDL_MapRGB(screen->format, 0, 255, 0));
-	temp = window->image;
-	window->image = draw;
-	DrawWindow(window, screen);
-	window->image = temp;
-	SDL_FreeSurface(draw);
-}
-
-void ShowBMP(SDL_Surface *image, SDL_Surface *screen, int x, int y)
-{
-    SDL_Rect dest;
-
-    // Blit onto the screen surface.
-    //   The surfaces should not be locked at this point.
-     
-    dest.x = x;
-    dest.y = y;
-    dest.w = image->w;
-    dest.h = image->h;
-    SDL_BlitSurface(image, NULL, screen, &dest);
-
-    // Update the changed portion of the screen
-    SDL_UpdateRects(screen, 1, &dest);
-}
-
-void InitMouse()
-{
-	Mouse = NewEntity();
-	Mouse->sprite = LoadSprite("images/mouse.png", 16, 16, White, Brown, Cyan);
-	Mouse->framestates[0] = 0;
-	Mouse->framestates[1] = 16;
-	Mouse->framestates[2] = 32;
-	Mouse->framestates[3] = 48;
-	Mouse->state = 0;
-	Mouse->shown = 0;
-	Mouse->frame = 0;
-}
-
-void DrawMouse()
-{
-	int mx,my;
-	SDL_GetMouseState(&mx, &my);
-	DrawSprite(Mouse->sprite, screen, mx, my, Mouse->frame);
-	Mouse->count = GetNextCount(Mouse);
-	Mouse->frame = Mouse->count + Mouse->framestates[Mouse->state];
-}
-*/

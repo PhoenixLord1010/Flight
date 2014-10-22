@@ -2,13 +2,17 @@
 #include "entity.h"
 
 extern SDL_Surface *screen;
-extern Entity *Player;
 extern float offset;
 
 int CurrentLevel = 0;
-int NumLevels = 2;
 int CurrentSection = 0;
+int lives = 3;
 int delay = 30;
+float cx = 100;		/*Checkpoint position*/
+float cy = 550;		/*Checkpoint position*/
+float coff = 0;		/*Checkpoint offset*/
+float csec = 0;		/*Chackpoint section*/
+Entity *player;
 
 void RenderLevel(int level)
 {
@@ -127,7 +131,7 @@ void RenderLevel(int level)
 	if(level == 1)
 	{
 		if(CurrentSection == 0)
-		{
+		{			
 			BuildSmallTile(-64);
 			BuildTile(0);
 			BuildTile(256);
@@ -271,30 +275,63 @@ void RenderLevel(int level)
 
 void UpdateLevel()
 {
+	if(!lives)exit(1);	/*Game Over*/
+	
+	if(player == NULL)	/*Make a new player at the last checkpoint*/
+	{
+		player = MakePlayer(cx, cy);
+		offset = coff;
+		CurrentSection = csec;
+	}
+
+	if(player->sx >= (screen->w * 0.6) + offset)offset += player->sx - ((screen->w * 0.6) + offset);	/*Scroll Screen with Player*/
+
+	/*When the player reaches a certain point, load the next section*/
 	if(offset + screen->w >= 2028 && CurrentSection == 1)CurrentSection++;
 	if(offset + screen->w >= 3052 && CurrentSection == 3)CurrentSection++;
 	if(offset + screen->w >= 4076 && CurrentSection == 5)CurrentSection++;
 	if(offset + screen->w >= 5100 && CurrentSection == 7)CurrentSection++;
 	if(offset + screen->w >= 6124 && CurrentSection == 9)CurrentSection++;
 	if(offset + screen->w >= 7148 && CurrentSection == 11)CurrentSection++;
-	if(Player->sx >= 8200)
+
+	if(player->sx >= 4096)		/*Sets checkpoint*/
 	{
-		Player->vx = 0;
-		Player->vy = 0;
-		Player->invuln = 30;
+		cx = 4196;
+		cy = 550;
+		coff = 4096;
+		csec = 6;
+	}
+
+	/*End of Level*/
+	if(player->sx >= 8200)
+	{
+		player->vx = 0;			/*Freezes the player, kinda*/
+		player->vy = 0;
+		player->invuln = 30;
 		if(delay <= 0)
 		{
-			ClearEntitiesExcept(Player);
-			Player->sx = 100;
-			Player->sy = 550;
-			offset = 0;
-			CurrentSection = 0;
+			player = NULL;
+			ClearEntities();
+			cx = 100;			/*Reset checkpoint stuff*/
+			cy = 550;
+			coff = 0;
+			csec = 0;
 			CurrentLevel++;
+			delay = 30;
+			return;
 		}
 		else delay--;
 	}
+
+	if(player->state == ST_DEAD)	/*Player died*/
+	{	
+		lives--;
+		player = NULL;
+		ClearEntities();
+		return;
+	}
 	
-	if(CurrentLevel == 2)exit(1);
+	if(CurrentLevel == 2)exit(1);	/*Win Condition*/
 
 	RenderLevel(CurrentLevel);
 }

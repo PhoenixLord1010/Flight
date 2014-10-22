@@ -1,6 +1,10 @@
 #ifndef _GRAPHICS_
 #define _GRAPHICS_
 
+/*
+Functions for handling graphical stuff, like sprites and fonts
+*/
+
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_ttf.h"
@@ -17,16 +21,16 @@ typedef struct Sprite_T
 {
 	SDL_Surface *image;
 	char filename[20];
-	int w,h;
+	int w, h;				/*Width and height of individual frames*/
 	int framesperline;
 	int numframes;
-	int color1,color2,color3;
+	int color1, color2, color3;
 	int used;
 }Sprite;
 
 typedef struct
 {
-	int xres,yres,depth;
+	int xres, yres, depth;
 }ScreenData;
 
 /*Basics*/
@@ -69,14 +73,5 @@ void DrawMessages();
 void InitMessages();
 void NewMessage(char *text,Uint32 color);
 
-/*
-void ShowBMP(SDL_Surface *image, SDL_Surface *screen, int x, int y);
-void DrawWindow(Sprite *sprite, SDL_Surface *surface);
-void PaintWindow(SDL_Surface *buffer, int x, int y, int w, int h, Uint32 color);
-Sprite *NewWindow(int sx, int sy, int sw, int sh, int bgcolor);
-Sprite *DisplayBar();
-void InitMouse();
-void DrawMouse();
-*/
 
 #endif

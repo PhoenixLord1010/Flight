@@ -6,6 +6,7 @@
 extern SDL_Surface *screen;
 extern SDL_Rect Camera;
 extern float offset;
+extern int lives;
 
 Entity EntityList[MAXENTITIES];
 Entity *Player;
@@ -20,39 +21,6 @@ int KeyCount;
 Uint8 *oldkeys; /*last frame's key presses*/
 Uint8 *keys;    /*current frame's key presses*/
 
-
-void DrawEntities()
-{
-	int i;
-	for(i = 0; i < MAXENTITIES; i++)
-	{
-		if(EntityList[i].used != 0)
-		{
-			if(EntityList[i].shown != 0)
-				DrawEntity(&EntityList[i]);
-		}
-	}
-}
-
-void UpdateEntities()
-{
-	int i;
-	for(i = 0; i < MAXENTITIES; i++)
-	{
-		if(EntityList[i].used != 0)
-		{
-			if(EntityList[i].think != NULL)
-			{
-				EntityList[i].think(&EntityList[i]);
-			}
-		}
-	}
-}
-
-void DrawEntity(Entity *ent)
-{
-	DrawSprite(ent->sprite,screen,ent->sx,ent->sy,ent->frame);
-}
 
 void InitEntityList()
 {
@@ -70,41 +38,9 @@ void InitEntityList()
 	memset(EntityList, 0, sizeof(Entity) * MAXENTITIES);
 }
 
-Entity *NewEntity()
-{
-	int i;
-	if(NumEnts + 1 >= MAXENTITIES)
-		return NULL;
-	for(i = 0; i <= MAXENTITIES; i++)
-	{
-		if(EntityList[i].used == 0)
-		{
-			memset(&EntityList[i], 0, sizeof(Entity));
-			EntityList[i].used = 1;
-			EntityList[i].shown = 1;
-			NumEnts++;
-			return &EntityList[i];
-		}
-	}
-	return NULL;
-}
-
-void FreeEntity(Entity *ent)
-{
-	NumEnts--;
-	ent->used = 0;
-	if(ent->sprite != NULL)FreeSprite(ent->sprite);
-	ent->sprite = NULL;
-	ent->owner = NULL;
-	ent->think = NULL;
-	ent->shown = 0;
-	ent->state = 0;
-	memset(ent, 0, sizeof(Entity));
-}
-
 void ClearEntities()
 {
-	int i = 0;
+	int i;
 	for(i = 0; i < MAXENTITIES; i++)
 	{
 		if(EntityList[i].used != 0)
@@ -123,6 +59,65 @@ void ClearEntitiesExcept(Entity *skip)
     }
   }
 }
+
+Entity *NewEntity()
+{
+	int i;
+	
+	if(NumEnts + 1 >= MAXENTITIES)
+		return NULL;
+	NumEnts++;
+	for(i = 0; i <= MAXENTITIES; i++)
+		if(!EntityList[i].used)break;
+	EntityList[i].used = 1;
+	EntityList[i].shown = 1;
+	//memset(&EntityList[i], 0, sizeof(Entity));
+	return &EntityList[i];
+}
+
+void FreeEntity(Entity *ent)
+{
+	NumEnts--;
+	if(ent->sprite != NULL)FreeSprite(ent->sprite);
+	ent->sprite = NULL;
+	ent->owner = NULL;
+	ent->think = NULL;
+	ent->used = 0;
+	ent->shown = 0;
+	//memset(ent, 0, sizeof(Entity));
+}
+
+void DrawEntity(Entity *ent)
+{
+	DrawSprite(ent->sprite, screen, ent->sx, ent->sy, ent->frame);
+}
+
+
+void DrawEntities()
+{
+	int i;
+	for(i = 0; i < MAXENTITIES; i++)
+	{
+		if((EntityList[i].used == 1) && (EntityList[i].shown == 1))
+				DrawEntity(&EntityList[i]);
+	}
+}
+
+void UpdateEntities()
+{
+	int i;
+	for(i = 0; i < MAXENTITIES; i++)
+	{
+		if(EntityList[i].used)
+		{
+			if(EntityList[i].think != NULL)
+			{
+				EntityList[i].think(&EntityList[i]);
+			}
+		}
+	}
+}
+
 
 int Collide(SDL_Rect box1, SDL_Rect box2)
 {
@@ -180,7 +175,7 @@ void CheckCollisions(Entity *self, SDL_Rect box1, SDL_Rect *xCollision, SDL_Rect
 }
 
 
-Entity *MakePlayer()
+Entity *MakePlayer(int x, int y)
 {
 	Entity *player;
 	player = NewEntity();
@@ -191,8 +186,8 @@ Entity *MakePlayer()
 	player->bbox.w = 22;
 	player->bbox.h = 48;
 	player->frame = 0;
-	player->sx = 100;
-	player->sy = 550;
+	player->sx = x;
+	player->sy = y;
 	player->shown = 1;
 	player->delay = 1;
 	player->busy = 0;
@@ -204,6 +199,7 @@ Entity *MakePlayer()
 	player->invuln = 0;
 	player->owner = player;
 	Player = player;
+	MakeSpear();
 	return player;
 }
 
@@ -251,7 +247,7 @@ void PlayerThink(Entity *self)
 		{
 			if(self->vx > 0)
 			{
-				if(self->vx >= 3)
+				if(self->vx >= 2.5)
 				{
 					if(self->invuln == 0)
 						self->vx -= 2.5;
@@ -261,7 +257,7 @@ void PlayerThink(Entity *self)
 			}
 			else
 			{
-				if(self->vx <= -3)
+				if(self->vx <= -2.5)
 				{
 					if(self->invuln == 0)
 						self->vx += 2.5;
@@ -404,13 +400,17 @@ void PlayerThink(Entity *self)
 		self->delay = 15;
 	}
 	
-	if(self->sy >= 800)self->state = ST_DEAD;	/*How you actually die*/
+	if(self->sy >= 800)		/*How you actually die*/
+
+		self->state = ST_DEAD;
 	
 
 	switch(self->state)		/*Animations*/
 	{
 		case ST_DEAD:
-			exit(1);
+			self->health = 0;
+			FreeEntity(self);
+			return;
 			break;
 		case ST_DYING:
 			if(self->delay <= 0)
@@ -509,11 +509,15 @@ Entity *MakeSpear()
 	spear->busy = 0;
 	spear->state = ST_SPEAR;
 	spear->think = SpearThink;
+	spear->owner = Player;
 	return spear;
 }
 
 void SpearThink(Entity *self)
 {
+	if(Player == NULL)FreeEntity(self);
+	
+	/*Always move with the player*/
 	self->sx = Player->sx - 23;
 	self->sy = Player->sy - 20;
 
@@ -616,6 +620,7 @@ void SpearThink(Entity *self)
 		self->busy = 15;
 	}
 
+	/*Cooldown*/
 	if(self->busy <= 8)
 	{
 		self->shown = 0;
@@ -727,7 +732,6 @@ void SnakeThink(Entity *self)
 		case ST_DEAD:
 			self->vy += 2;
 			self->sy += self->vy;
-			if(self->sy >= 800)FreeEntity(self);
 			break;
 		case ST_ENEMY:
 			if(self->delay <= 0)
@@ -745,7 +749,7 @@ void SnakeThink(Entity *self)
 			break;
 	}
 
-	if(self->sx + self->bbox.w < offset)FreeEntity(self);
+	if(self->sx + self->bbox.w < offset || self->sy > 800)FreeEntity(self);
 }
 
 Entity *SpawnEye(int x, int y, int wave)
@@ -764,7 +768,7 @@ Entity *SpawnEye(int x, int y, int wave)
 	eye->vx = -4;
 	eye->vy = 0;
 	eye->shown = 1;
-	eye->delay = 15 * wave;
+	eye->delay = 15 * wave;		/*In order to have the same wave, a group starts at the same place with slight delays for each member*/
 	eye->health = 1;
 	eye->healthmax = 1;
 	eye->state = ST_ENEMY;
@@ -791,7 +795,7 @@ void EyeThink(Entity *self)
 
 	if(self->health > 0 && self->delay <= 0)
 	{	
-		self->vy = 2 * sin(float(self->sx / 100));
+		self->vy = 2 * sin(float(self->sx / 100));	/*Wave motion*/
 		
 		self->sx += self->vx;
 		self->sy += self->vy;
@@ -849,7 +853,7 @@ Entity *BuildSnakePot(int x, int y, int i, int j)
 	pot->bbox.w = 32;
 	pot->bbox.h = 32;
 	pot->delay = 0;
-	pot->busy = j;
+	pot->busy = j;				/*Each pot can have its own spawn rate*/
 	pot->state = ST_TILE;
 	pot->think = PotThink;
 	return pot;

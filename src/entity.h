@@ -1,66 +1,69 @@
 #ifndef _ENTITY_
 #define _ENTITY_
 
+/*
+Functions and stuff for handling entities
+*/
+
 #include "graphics.h"
 
-#define MAXENTITIES		511
+#define MAXENTITIES		255
 #define MAXSTATES		20
-#define SOUNDSPERENT	4
 
 enum STATES {ST_IDLE,ST_WALK,ST_JUMP1,ST_JUMP2,ST_DASH,ST_DEAD,ST_DYING,ST_SPEAR,ST_ENEMY,ST_TILE};
 
 typedef struct ENTITY_T
 {
-	Sprite *sprite;
-	struct ENTITY_T *owner;
-	void (*think) (struct ENTITY_T *self);
-	int shown;
-	int used;
-	int frame;
-	int state;
-	float sx,sy;		/*Position*/
-	int animframe;
-	int isRight;
-	int uCheck, dCheck, lCheck, rCheck;
-	int busy;			/*Attack delay*/
-	int delay;			/*Animation delay*/
-	float vx,vy;		/*Velocity*/
-	int framestates[MAXSTATES];
-	SDL_Rect bbox;
-	int health;
-	int healthmax;
-	int invuln;			/*Delay until you can be hit again*/
+	Sprite *sprite;				/*The sprite to be drawn*/
+	struct ENTITY_T *owner;		/*For stuff spawned by entities*/
+	void (*think) (struct ENTITY_T *self);	/*Called by engine to handle inputs*/
+	int used;					/*Is this entity free*/
+	int shown;					/*Should this be rendered*/
+	int frame;					/*Current frame to render*/
+	int state;					/*What state is this in*/
+	float sx,sy;				/*Position*/
+	float vx,vy;				/*Velocity*/
+	SDL_Rect bbox;				/*Bounding box for collisions*/
+	
+	int uCheck, dCheck, lCheck, rCheck;		/*Collision checks*/
+	int isRight;				/*Which way is this facing*/
+	int busy;					/*Attack delay*/
+	int delay;					/*Animation delay*/
+	
+	int health;					/*Current health*/
+	int healthmax;				/*Max health*/
+	int invuln;					/*Delay until you can be hit again*/
 }Entity;
 
 /*General Entity Stuff*/
 void InitEntityList();
-Entity *NewEntity();
-void FreeEntity(Entity *ent);
 void ClearEntities();
 void ClearEntitiesExcept(Entity *skip);
-void DrawEntities();
+Entity *NewEntity();
+void FreeEntity(Entity *ent);
 void DrawEntity(Entity *ent);
+void DrawEntities();
 void UpdateEntities();
 
 /*Specific Entity Stuff*/
-Entity *MakePlayer();
+Entity *MakePlayer(int x, int y);					/*Player*/
 void PlayerThink(Entity *self);
-Entity *MakeSpear();
+Entity *MakeSpear();								/*Spear*/
 void SpearThink(Entity *self);
-Entity *SpawnSnake(int x, int y, int i);
+Entity *SpawnSnake(int x, int y, int i);			/*Snake enemy*/
 void SnakeThink(Entity *self);
-Entity *SpawnEye(int x, int y, int wave);
+Entity *SpawnEye(int x, int y, int wave);			/*Eye enemy*/
 void EyeThink(Entity *self);
-Entity *BuildSnakePot(int x, int y, int i, int j);
+Entity *BuildSnakePot(int x, int y, int i, int j);	/*Snake spawn point*/
 void PotThink(Entity *self);
-Entity *BuildTile(int x);
-Entity *BuildSmallTile(int x);
-Entity *BuildPlatform(int x, int y);
-Entity *BuildWall(int x, int y);
-Entity *BuildColumn(int x, int y);
+Entity *BuildTile(int x);							/*Ground*/
+Entity *BuildSmallTile(int x);						/*Also ground*/
+Entity *BuildPlatform(int x, int y);				/*Platforms*/
+Entity *BuildWall(int x, int y);					/*Walls*/
+Entity *BuildColumn(int x, int y);					/*Columns*/
 void TileThink(Entity *self);
 
-/*Keyboard Inputs*/
+/*Keyboard Input Stuff*/
 void InitKeyboard();
 void ClearKeyboard();
 void UpdateKeyboard();

@@ -22,11 +22,8 @@ int main(int argc, char *argv[])
 	int done = 0;
 	int keyn;
 	Uint8 *keys;
-	Entity *player;
 	
 	Init_ALL();
-	player = MakePlayer();
-	MakeSpear();
 	do
 	{	
 		ResetBuffer();
@@ -34,14 +31,12 @@ int main(int argc, char *argv[])
 		keys = SDL_GetKeyState(&keyn);
 		if(keys[SDLK_ESCAPE])done = 1;
 
-		if(player->sx >= (screen->w * 0.6) + offset)offset += player->sx - ((screen->w * 0.6) + offset);	/*Scroll Screen with Player*/
-		//if(player->sx <= (screen->w * 0.2) + screen->offset && screen->offset > 100)screen->offset -= ((screen->w * 0.2) + screen->offset) - player->sx;
+		SDL_PumpEvents();
 
 		Draw_ALL();
 		Update_ALL();
 
 		NextFrame();
-		SDL_PumpEvents();
 	}while(!done);
 
 	exit(0);
@@ -60,6 +55,8 @@ void Init_ALL()
 	InitSpriteList();
 	InitEntityList();
 	InitKeyboard();
+	InitMessages();
+	LoadFonts();
 	atexit(CleanUpAll);
 }
 
