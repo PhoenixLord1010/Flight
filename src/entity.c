@@ -28,7 +28,7 @@ void InitEntityList()
 	NumEnts = 0;
 	for(i = 0; i < MAXENTITIES; i++)
 	{
-		if(EntityList[i].sprite != NULL)FreeSprite(EntityList[i].sprite);
+		//if(EntityList[i].sprite != NULL)FreeSprite(EntityList[i].sprite);
 		EntityList[i].sprite = NULL;
 		EntityList[i].owner = NULL;
 		EntityList[i].think = NULL;
@@ -43,7 +43,7 @@ void ClearEntities()
 	int i;
 	for(i = 0; i < MAXENTITIES; i++)
 	{
-		if(EntityList[i].used != 0)
+		//if(EntityList[i].used != 0)
 			FreeEntity(&EntityList[i]);
 	}
 }
@@ -70,21 +70,21 @@ Entity *NewEntity()
 	for(i = 0; i <= MAXENTITIES; i++)
 		if(!EntityList[i].used)break;
 	EntityList[i].used = 1;
-	EntityList[i].shown = 1;
+	//EntityList[i].shown = 1;
 	//memset(&EntityList[i], 0, sizeof(Entity));
 	return &EntityList[i];
 }
 
 void FreeEntity(Entity *ent)
 {
+	ent->used = 0;
 	NumEnts--;
 	if(ent->sprite != NULL)FreeSprite(ent->sprite);
 	ent->sprite = NULL;
 	ent->owner = NULL;
-	ent->think = NULL;
-	ent->used = 0;
-	ent->shown = 0;
-	//memset(ent, 0, sizeof(Entity));
+	//ent->think = NULL;
+	//ent->shown = 0;
+	memset(ent, 0, sizeof(Entity));
 }
 
 void DrawEntity(Entity *ent)
@@ -98,8 +98,8 @@ void DrawEntities()
 	int i;
 	for(i = 0; i < MAXENTITIES; i++)
 	{
-		if((EntityList[i].used == 1) && (EntityList[i].shown == 1))
-				DrawEntity(&EntityList[i]);
+		if((EntityList[i].used > 0) && (EntityList[i].shown > 0))
+			DrawEntity(&EntityList[i]);
 	}
 }
 
@@ -829,7 +829,7 @@ void EyeThink(Entity *self)
 		case ST_DEAD:
 			self->vy += 2;
 			self->sy += self->vy;
-			if(self->sy >= 800)FreeEntity(self);
+			//if(self->sy >= 800)FreeEntity(self);
 			break;
 		case ST_ENEMY:
 			self->frame = 0;
@@ -856,6 +856,7 @@ Entity *BuildSnakePot(int x, int y, int i, int j)
 	pot->busy = j;				/*Each pot can have its own spawn rate*/
 	pot->state = ST_TILE;
 	pot->think = PotThink;
+	pot->owner = NULL;
 	return pot;
 }
 
@@ -893,6 +894,7 @@ Entity *BuildTile(int x)
 	tile->bbox.h = 32;
 	tile->state = ST_TILE;
 	tile->think = TileThink;
+	tile->owner = NULL;
 	return tile;
 }
 
@@ -911,6 +913,7 @@ Entity *BuildSmallTile(int x)
 	tile->bbox.h = 32;
 	tile->state = ST_TILE;
 	tile->think = TileThink;
+	tile->owner = NULL;
 	return tile;
 }
 
@@ -929,6 +932,7 @@ Entity *BuildPlatform(int x, int y)
 	plat->bbox.h = 12;
 	plat->state = ST_TILE;
 	plat->think = TileThink;
+	plat->owner = NULL;
 	return plat;
 }
 
@@ -947,6 +951,7 @@ Entity *BuildWall(int x, int y)
 	wall->bbox.h = 256;
 	wall->state = ST_TILE;
 	wall->think = TileThink;
+	wall->owner = NULL;
 	return wall;
 }
 
@@ -965,12 +970,13 @@ Entity *BuildColumn(int x, int y)
 	column->bbox.h = 64;
 	column->state = ST_TILE;
 	column->think = TileThink;
+	column->owner = NULL;
 	return column;
 }
 
 void TileThink(Entity *self)
 {
-	if(self->sx + self->bbox.w < offset)FreeEntity(self);
+	//if(self->sx + self->bbox.w < offset)FreeEntity(self);
 }
 
 

@@ -256,11 +256,11 @@ void RenderLevel(int level)
 		}
 		if(CurrentSection == 12)
 		{
-			BuildPlatform(7424, 600);
+			BuildPlatform(7296, 600);
 			BuildPlatform(7680, 500);
-			BuildPlatform(7360, 400);
+			BuildPlatform(7232, 400);
 			BuildPlatform(7744, 300);
-			BuildPlatform(7296, 200);
+			BuildPlatform(7168, 200);
 			BuildPlatform(7808, 100);
 			BuildWall(8040, 112);
 			BuildWall(8040, 368);
@@ -269,6 +269,26 @@ void RenderLevel(int level)
 			BuildTile(8064);
 			BuildTile(8192);
 			BuildTile(8448);
+
+			SpawnEye(9500, 500, 0);
+			SpawnEye(9500, 500, 1);
+			SpawnEye(9500, 500, 2);
+			SpawnEye(10000, 400, 0);
+			SpawnEye(10000, 400, 1);
+			SpawnEye(10000, 400, 2);
+			SpawnEye(10000, 400, 3);
+			SpawnEye(10500, 250, 0);
+			SpawnEye(10500, 250, 1);
+			SpawnEye(10500, 250, 2);
+			SpawnEye(11000, 100, 0);
+			SpawnEye(11000, 100, 1);
+			SpawnEye(11000, 100, 2);
+			SpawnEye(11000, 100, 3);
+			SpawnEye(11500, 50, 0);
+			SpawnEye(11500, 50, 1);
+			SpawnEye(11500, 50, 2);
+			
+			CurrentSection++;
 		}
 	}
 }

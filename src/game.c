@@ -16,6 +16,7 @@ int windowed = 1;
 void Init_ALL();
 void Update_ALL();
 void Draw_ALL();
+void StartScreen();
 
 int main(int argc, char *argv[])
 {
@@ -24,6 +25,7 @@ int main(int argc, char *argv[])
 	Uint8 *keys;
 	
 	Init_ALL();
+	StartScreen();
 	do
 	{	
 		ResetBuffer();
@@ -72,4 +74,31 @@ void Draw_ALL()
 	DrawEntities();
 	DrawMessages();
 	DrawHUD();
+}
+
+void StartScreen()
+{
+	int done = 0;
+	int delay = 0;
+	int keyn;
+	Uint8 *keys;
+	
+	do
+	{
+		ResetBuffer();
+		SDL_PumpEvents();
+		
+		keys = SDL_GetKeyState(&keyn);
+		if(keys[SDLK_RETURN])done = 1;
+		
+		DrawText("<Flight>", screen, screen->w/2 - 140, screen->h/2.5, IndexColor(White), F_Large);
+		if(delay <= 30)
+			DrawText("Press Enter", screen, screen->w/2 - 43, screen->h/1.9, IndexColor(White), F_Small);
+		if(delay == 0)
+			delay = 60;
+		else delay--;
+
+		NextFrame();
+	}while(!done);
+
 }

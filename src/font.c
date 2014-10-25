@@ -24,7 +24,7 @@ void LoadFonts()
 {
   LoadFont("fonts/font2.ttf",14,F_Small);
   LoadFont("fonts/font1.ttf",16,F_Medium);
-  LoadFont("fonts/font1.ttf",18,F_Large);
+  LoadFont("fonts/font3.ttf",72,F_Large);
 }
 
 void LoadFont(char filename[40],int ptsize,int type)

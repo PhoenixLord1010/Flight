@@ -13,8 +13,6 @@ SDL_Surface *videobuffer;
 SDL_Rect Camera;
 Sprite SpriteList[MaxSprites];
 Uint32 NOW;
-//Entity *Mouse;
-//TTF_Font *font;
 
 int NumSprites;
 float offset;
@@ -310,7 +308,7 @@ Sprite *LoadSwappedSprite(char *filename, int sizex, int sizey, int c1, int c2, 
   /*first search to see if the requested sprite image is alreday loaded*/
   for(i = 0; i < NumSprites; i++)
   {
-    if((strncmp(filename,SpriteList[i].filename,20)==0)&&(SpriteList[i].used >= 1)&&(c1 == SpriteList[i].color1)&&(c2 == SpriteList[i].color2)&&(c3 == SpriteList[i].color3))
+    if((strncmp(filename,SpriteList[i].filename,80)==0)&&(SpriteList[i].used >= 1)&&(c1 == SpriteList[i].color1)&&(c2 == SpriteList[i].color2)&&(c3 == SpriteList[i].color3))
     {
       SpriteList[i].used++;
       return &SpriteList[i];
