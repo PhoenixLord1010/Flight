@@ -345,9 +345,14 @@ void UpdateLevel()
 
 	if(player->state == ST_DEAD)	/*Player died*/
 	{	
-		lives--;
-		player = NULL;
-		ClearEntities();
+		if(delay <= 0)
+		{
+			lives--;
+			player = NULL;
+			ClearEntities();
+			delay = 30;
+		}
+		else delay--;
 		return;
 	}
 	

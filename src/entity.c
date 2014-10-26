@@ -194,8 +194,8 @@ Entity *MakePlayer(int x, int y)
 	player->state = ST_IDLE;
 	player->isRight = 1;
 	player->think = PlayerThink;
-	player->health = 10;
-	player->healthmax = 10;
+	player->health = 5;
+	player->healthmax = 5;
 	player->invuln = 0;
 	player->owner = player;
 	Player = player;
@@ -291,7 +291,10 @@ void PlayerThink(Entity *self)
 			self->vx = 0;
 			self->sx = xCol.x + xCol.w;
 		}
+		
+		/*Keep player on screen*/
 		if(self->sx < offset)self->sx = offset;
+		if(self->sy <= 0)self->vy = 1;
 
 
 		self->sx += self->vx;
@@ -409,7 +412,7 @@ void PlayerThink(Entity *self)
 	{
 		case ST_DEAD:
 			self->health = 0;
-			FreeEntity(self);
+			//FreeEntity(self);
 			return;
 			break;
 		case ST_DYING:
@@ -822,7 +825,7 @@ void EyeThink(Entity *self)
 
 	if(self->delay > 0)self->delay--;
 
-	if(self->sx + self->bbox.w < offset)FreeEntity(self);	/*Off Screen*/
+	//if(self->sx + self->bbox.w < offset)FreeEntity(self);	/*Off Screen*/
 
 	switch(self->state)		/*Animations*/
 	{

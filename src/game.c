@@ -100,5 +100,4 @@ void StartScreen()
 
 		NextFrame();
 	}while(!done);
-
 }
