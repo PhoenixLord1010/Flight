@@ -4,7 +4,7 @@
 #include "entity.h"
 #include "graphics.h"
 
-#define MaxSprites		511
+#define MaxSprites		255
 
 SDL_Surface *screen;
 SDL_Surface *background;
@@ -26,7 +26,7 @@ void Init_Graphics(int windowed)
 	Uint32 Vflags =	SDL_ANYFORMAT | SDL_SRCALPHA;		//SDL_FULLSCREEN | SDL_ANYFORMAT;
 	Uint32 HWflag = 0;
 	SDL_Surface *temp;
-	S_Data.xres = 1280;
+	S_Data.xres = 1024;	//1280;
 	S_Data.yres = 720;
 	if(!windowed)Vflags |= SDL_FULLSCREEN;
 	#if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -46,25 +46,25 @@ void Init_Graphics(int windowed)
 		exit(1);
 	}
 	atexit(SDL_Quit);
-	if(SDL_VideoModeOK(1280, 720, 32, Vflags | SDL_HWSURFACE))		//SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
+	if(SDL_VideoModeOK(1024, 720, 32, Vflags | SDL_HWSURFACE))		//SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
 	{
-		S_Data.xres = 1280;
+		S_Data.xres = 1024;	//1280;
 		S_Data.yres = 720;
 		S_Data.depth = 32;
 		//Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE;
 		HWflag = SDL_HWSURFACE;
 	}
-	else if(SDL_VideoModeOK(1280, 720, 16,	Vflags | SDL_HWSURFACE))	//SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
+	else if(SDL_VideoModeOK(1024, 720, 16,	Vflags | SDL_HWSURFACE))	//SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
 		 {
-			 S_Data.xres = 1280;
+			 S_Data.xres = 1024;
 			 S_Data.yres = 720;
 			 S_Data.depth = 16;
 			 //Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE;
 			 HWflag = SDL_HWSURFACE;
 		 }
-		 else if(SDL_VideoModeOK(1280, 720, 16,	Vflags))		//SDL_FULLSCREEN | SDL_ANYFORMAT))
+		 else if(SDL_VideoModeOK(1024, 720, 16,	Vflags))		//SDL_FULLSCREEN | SDL_ANYFORMAT))
 			  {
-				  S_Data.xres = 1280;
+				  S_Data.xres = 1024;
 				  S_Data.yres = 720;
 				  S_Data.depth = 16;
 				  //Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT;
@@ -84,7 +84,7 @@ void Init_Graphics(int windowed)
 	}
 	screen = SDL_DisplayFormat(temp);
 	SDL_FreeSurface(temp);
-	temp = SDL_CreateRGBSurface(HWflag/*Vflags*/, 2560, 720, S_Data.depth, rmask, gmask, bmask, amask);
+	temp = SDL_CreateRGBSurface(HWflag/*Vflags*/, 2048, 720, S_Data.depth, rmask, gmask, bmask, amask);
 	if(temp == NULL)
 	{
 		fprintf(stderr, "Couldn't initialise background buffer: %s\n", SDL_GetError());
@@ -202,9 +202,9 @@ Uint32 getpixel(SDL_Surface *surface, int x, int y)
 void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 {
 	SDL_Rect point = {0,0,1,1};
-  point.x = x;
-  point.y = y;
-  SDL_FillRect(surface,&point,pixel);
+	point.x = x;
+	point.y = y;
+	SDL_FillRect(surface,&point,pixel);
 }
 
 void DrawFilledRect(float sx, float sy, int sw, int sh, Uint32 Color, SDL_Surface *surface)
@@ -241,18 +241,19 @@ void InitSpriteList()
 	int x;
 	NumSprites = 0;
 	memset(SpriteList, 0, sizeof(Sprite) * MaxSprites);
-	for(x = 0; x < MaxSprites; x++)SpriteList[x].image = NULL;
+	for(x = 0; x < MaxSprites; x++)SpriteList[x].surface = NULL;
 }
 
 void FreeSprite(Sprite *sprite)
 {
+	if(!sprite)return;
 	sprite->used--;
 	if(sprite->used <= 0)
 	{
-		NumSprites--;
 		strcpy(sprite->filename,"\0");
-		if(sprite->image != NULL)SDL_FreeSurface(sprite->image);
-		sprite->image = NULL;
+		NumSprites--;
+		if(sprite->surface != NULL)SDL_FreeSurface(sprite->surface);
+		sprite->surface = NULL;
 	}
 }
 
@@ -274,7 +275,7 @@ void DrawSprite(Sprite *sprite, SDL_Surface *surface, float sx, float sy, int fr
     dest.y = sy;
     dest.w = sprite->w;
     dest.h = sprite->h;
-    SDL_BlitSurface(sprite->image, &src, surface, &dest);
+    SDL_BlitSurface(sprite->surface, &src, surface, &dest);
 }
 
 void DrawSpritePixel(Sprite *sprite, SDL_Surface *surface, float sx, float sy, int frame)
@@ -288,7 +289,7 @@ void DrawSpritePixel(Sprite *sprite, SDL_Surface *surface, float sx, float sy, i
     dest.y = sy;
     dest.w = 1;
     dest.h = 1;
-    SDL_BlitSurface(sprite->image, &src, surface, &dest);
+    SDL_BlitSurface(sprite->surface, &src, surface, &dest);
 }
 
 void CloseSprites()
@@ -296,65 +297,91 @@ void CloseSprites()
 	int i;
 	for(i = 0; i < MaxSprites; i++)
 	{
-		FreeSprite(&SpriteList[i]);
+		if(SpriteList[i].loaded)
+		{
+			if(SpriteList[i].surface != NULL)SDL_FreeSurface(SpriteList[i].surface);
+			SpriteList[i].surface = NULL;
+		}
 	}
 }
 
 
 Sprite *LoadSwappedSprite(char *filename, int sizex, int sizey, int c1, int c2, int c3)
 {
-  int i;
-  SDL_Surface *temp;
-  /*first search to see if the requested sprite image is alreday loaded*/
-  for(i = 0; i < NumSprites; i++)
-  {
-    if((strncmp(filename,SpriteList[i].filename,80)==0)&&(SpriteList[i].used >= 1)&&(c1 == SpriteList[i].color1)&&(c2 == SpriteList[i].color2)&&(c3 == SpriteList[i].color3))
-    {
-      SpriteList[i].used++;
-      return &SpriteList[i];
-    }
-  }
-  /*makesure we have the room for a new sprite*/
-  if(NumSprites + 1 >= MaxSprites)
-  {
-        fprintf(stderr, "Maximum Sprites Reached.\n");
-        exit(1);
-  }
-  /*if its not already in memory, then load it.*/
-  NumSprites++;
-  for(i = 0;i <= NumSprites;i++)
-  {
-    if(!SpriteList[i].used)break;
-  }
-  temp = IMG_Load(filename);
-  if(temp == NULL)
-  {
-        fprintf(stderr, "FAILED TO LOAD A VITAL SPRITE.\n",filename);
+	int i;
+	SDL_Surface *temp;
+	int n;
+
+	/*first search to see if the requested sprite image is already loaded*/
+	for(i = 0; i < MaxSprites; i++)
+	{
+		if((strncmp(filename,SpriteList[i].filename,80)==0)&&(SpriteList[i].loaded == 1)&&(sizex == SpriteList[i].w)&&(sizey == SpriteList[i].h))
+		{
+			SpriteList[i].used++;
+			return &SpriteList[i];
+		}
+	}
+	/*make sure we have the room for a new sprite*/
+	/*if it's not already in memory, then load it*/
+	n = -1;
+	for(i = 0; i < MaxSprites; i++)
+	{
+		if(!SpriteList[i].loaded)
+		{
+			n = i;
+			break;
+		}
+	}
+	/*if every slot has been loaded, find one that is no longer in use*/
+	if(n == -1)
+	{
+		for(i = 0; i < MaxSprites; i++)
+		{
+			if(SpriteList[i].used <= 0)
+			{
+				n = 1;
+				break;
+			}
+		}
+		if(n == -1)
+		{
+			fprintf(stderr,"Ran out of places for sprites!\n");
+			return NULL;
+		}
+		strcpy(SpriteList[n].filename,"\0");
+		if(SpriteList[n].surface != NULL)SDL_FreeSurface(SpriteList[n].surface);
+		SpriteList[n].surface = NULL;
+	}
+	temp = IMG_Load(filename);
+	if(temp == NULL)
+	{
+        fprintf(stderr,"unable to load a vital sprite: %s\n",SDL_GetError());
         return NULL;
-  }
-  SDL_SetColorKey(temp, SDL_SRCCOLORKEY, SDL_MapRGB(temp->format, 255,255,255));
-  SpriteList[i].image = SDL_DisplayFormat(temp);
-  SDL_FreeSurface(temp);
-  /*sets a transparent color for blitting.*/
-  //SDL_SetColorKey(SpriteList[i].image, SDL_SRCCOLORKEY , SDL_MapRGB(SpriteList[i].image->format, 255,255,255));
-  //fprintf(stderr,"asked for colors: %d,%d,%d \n",c1,c2,c3);
-  SwapSprite(SpriteList[i].image,c1,c2,c3);
-   /*then copy the given information to the sprite*/
-  strncpy(SpriteList[i].filename,filename,80);
-      /*now sprites don't have to be 16 frames per line, but most will be.*/
-  SpriteList[i].framesperline = 16;
-  if((sizex) && (sizey))/*as long as neither x and y are zero*/
-  {
-    SpriteList[i].numframes = (SpriteList[i].image->w / sizex) * (SpriteList[i].image->h / sizey);
-  }
-  else SpriteList[i].numframes = -1;
-  SpriteList[i].w = sizex;
-  SpriteList[i].h = sizey;
-  SpriteList[i].color1 = c1;
-  SpriteList[i].color2 = c2;
-  SpriteList[i].color3 = c3;
-  SpriteList[i].used++;
-  return &SpriteList[i];
+	}
+	SDL_SetColorKey(temp, SDL_SRCCOLORKEY, SDL_MapRGB(temp->format, 255,255,255));
+	SpriteList[i].surface = SDL_DisplayFormat(temp);
+	SDL_FreeSurface(temp);
+	/*sets a transparent color for blitting.*/
+	//SDL_SetColorKey(SpriteList[i].image, SDL_SRCCOLORKEY , SDL_MapRGB(SpriteList[i].image->format, 255,255,255));
+	//fprintf(stderr,"asked for colors: %d,%d,%d \n",c1,c2,c3);
+	SwapSprite(SpriteList[i].surface,c1,c2,c3);
+
+	strncpy(SpriteList[i].filename,filename,80);
+	SpriteList[i].framesperline = 16;
+
+	if((sizex) && (sizey))/*as long as neither x and y are zero*/
+	{
+		SpriteList[i].numframes = (SpriteList[i].surface->w / sizex) * (SpriteList[i].surface->h / sizey);
+	}
+	else SpriteList[i].numframes = -1;
+	SpriteList[i].w = sizex;
+	SpriteList[i].h = sizey;
+	SpriteList[i].color1 = c1;
+	SpriteList[i].color2 = c2;
+	SpriteList[i].color3 = c3;
+	SpriteList[i].used++;
+	SpriteList[i].loaded = 1;
+	return &SpriteList[i];
 }
 
 Uint32 SetColor(Uint32 color, int newcolor1, int newcolor2, int newcolor3)

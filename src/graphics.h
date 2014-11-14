@@ -8,6 +8,7 @@ Functions for handling graphical stuff, like sprites and fonts
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_ttf.h"
+#include "GL\glew.h"
 
 /*Color Constants*/
 enum colors {Red = 1,Green = 2,Blue = 3,Yellow = 4,Orange = 5,Violet = 6,Brown = 7,Grey = 8,DarkRed = 9,DarkGreen = 10,
@@ -17,15 +18,23 @@ enum colors {Red = 1,Green = 2,Blue = 3,Yellow = 4,Orange = 5,Violet = 6,Brown =
 
 enum FONTS {F_Small, F_Medium, F_Large};
 
+typedef struct COORD_T
+{
+  float x,y,z;
+}Coord;
+
 typedef struct Sprite_T
 {
-	SDL_Surface *image;
-	char filename[20];
-	int w, h;				/*Width and height of individual frames*/
-	int framesperline;
-	int numframes;
+	//GLuint image;
+	char filename[80];
+	SDL_Surface *surface;
 	int color1, color2, color3;
-	int used;
+	int w, h;				/*width and height of individual frames*/
+	Coord dimen;			/*width and height with gl coords*/
+	int framesperline;			/*default is 16*/
+	int used;				/*how many times a single sprite's been loaded*/
+	int loaded;				/*is a sprite being used at all*/
+	int numframes;
 }Sprite;
 
 typedef struct

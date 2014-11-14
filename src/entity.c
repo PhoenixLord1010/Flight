@@ -6,7 +6,6 @@
 extern SDL_Surface *screen;
 extern SDL_Rect Camera;
 extern float offset;
-extern int lives;
 
 Entity EntityList[MAXENTITIES];
 Entity *Player;
@@ -28,12 +27,12 @@ void InitEntityList()
 	NumEnts = 0;
 	for(i = 0; i < MAXENTITIES; i++)
 	{
-		//if(EntityList[i].sprite != NULL)FreeSprite(EntityList[i].sprite);
+		EntityList[i].used = 0;
+		EntityList[i].think = NULL;
+		if(EntityList[i].sprite != NULL)FreeSprite(EntityList[i].sprite);
 		EntityList[i].sprite = NULL;
 		EntityList[i].owner = NULL;
-		EntityList[i].think = NULL;
-		EntityList[i].shown = 0;
-		EntityList[i].used = 0;
+		
 	}
 	memset(EntityList, 0, sizeof(Entity) * MAXENTITIES);
 }
@@ -43,7 +42,7 @@ void ClearEntities()
 	int i;
 	for(i = 0; i < MAXENTITIES; i++)
 	{
-		//if(EntityList[i].used != 0)
+		if(EntityList[i].used)
 			FreeEntity(&EntityList[i]);
 	}
 }
@@ -51,9 +50,9 @@ void ClearEntities()
 void ClearEntitiesExcept(Entity *skip)
 {
   int i;
-  for(i = 0;i < MAXENTITIES;i++)
+  for(i = 0; i < MAXENTITIES; i++)
   {
-    if((EntityList[i].used)&&(skip != &EntityList[i]))
+    if((EntityList[i].used) && (skip != &EntityList[i]))
     {
       FreeEntity(&EntityList[i]);
     }
@@ -63,27 +62,27 @@ void ClearEntitiesExcept(Entity *skip)
 Entity *NewEntity()
 {
 	int i;
-	
-	if(NumEnts + 1 >= MAXENTITIES)
+	if((NumEnts + 1) >= MAXENTITIES)
 		return NULL;
-	NumEnts++;
-	for(i = 0; i <= MAXENTITIES; i++)
-		if(!EntityList[i].used)break;
-	EntityList[i].used = 1;
-	//EntityList[i].shown = 1;
-	//memset(&EntityList[i], 0, sizeof(Entity));
-	return &EntityList[i];
+	for(i = 0; i < MAXENTITIES; i++)
+	{
+		if(!EntityList[i].used)
+		{
+			memset(&EntityList[i], 0, sizeof(Entity));
+			EntityList[i].used = 1;
+			EntityList[i].shown = 1;
+			NumEnts++;
+			return &EntityList[i];
+		}
+	}
+	return NULL;
 }
 
 void FreeEntity(Entity *ent)
 {
-	ent->used = 0;
 	NumEnts--;
+	ent->used = 0;
 	if(ent->sprite != NULL)FreeSprite(ent->sprite);
-	ent->sprite = NULL;
-	ent->owner = NULL;
-	//ent->think = NULL;
-	//ent->shown = 0;
 	memset(ent, 0, sizeof(Entity));
 }
 
@@ -412,7 +411,6 @@ void PlayerThink(Entity *self)
 	{
 		case ST_DEAD:
 			self->health = 0;
-			//FreeEntity(self);
 			return;
 			break;
 		case ST_DYING:
@@ -825,14 +823,14 @@ void EyeThink(Entity *self)
 
 	if(self->delay > 0)self->delay--;
 
-	//if(self->sx + self->bbox.w < offset)FreeEntity(self);	/*Off Screen*/
+	if(self->sx + self->bbox.w < offset)FreeEntity(self);	/*Off Screen*/
 
 	switch(self->state)		/*Animations*/
 	{
 		case ST_DEAD:
 			self->vy += 2;
 			self->sy += self->vy;
-			//if(self->sy >= 800)FreeEntity(self);
+			if(self->sy >= 800)FreeEntity(self);
 			break;
 		case ST_ENEMY:
 			self->frame = 0;
@@ -979,7 +977,7 @@ Entity *BuildColumn(int x, int y)
 
 void TileThink(Entity *self)
 {
-	//if(self->sx + self->bbox.w < offset)FreeEntity(self);
+	if(self->sx + self->bbox.w < offset)FreeEntity(self);
 }
 
 
