@@ -293,6 +293,7 @@ void PlayerThink(Entity *self)
 		
 		/*Keep player on screen*/
 		if(self->sx < offset)self->sx = offset;
+		if(self->sx + self->sprite->w > screen->w + offset)self->sx = screen->w + offset - self->sprite->w;
 		if(self->sy <= 0)self->vy = 1;
 
 
@@ -750,7 +751,7 @@ void SnakeThink(Entity *self)
 			break;
 	}
 
-	if(self->sx + self->bbox.w < offset || self->sy > 800)FreeEntity(self);
+	if(self->sx + self->bbox.w < offset || self->sy > 800)FreeEntity(self);		/*When offscreen, free self*/
 }
 
 Entity *SpawnEye(int x, int y, int wave)
@@ -836,6 +837,175 @@ void EyeThink(Entity *self)
 			self->frame = 0;
 			break;
 	}
+}
+
+Entity *SpawnCloud()
+{
+	Entity *cloud;
+	cloud = NewEntity();
+	if(cloud == NULL)return cloud;
+	cloud->sprite = LoadSprite("images/cloud.png",32,32);
+	cloud->bbox.x = 0;
+	cloud->bbox.y = 0;
+	cloud->bbox.w = 32;
+	cloud->bbox.h = 32;
+	cloud->frame = 0;
+	cloud->sx = Player->sx;
+	cloud->sy = Player->sy - 100;
+	cloud->shown = 1;
+	cloud->delay = 10;
+	cloud->health = 1;
+	cloud->healthmax = 1;
+	cloud->state = ST_IDLE;
+	cloud->think = CloudThink;
+	cloud->owner = NULL;
+	return cloud;
+}
+
+void CloudThink(Entity *self)
+{
+	SDL_Rect b1, b2, xCol, yCol;
+	
+	/*Check for Collisions*/
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+	CheckCollisions(self, b1, &xCol, &yCol);
+
+	if(self->health > 0)
+	{	
+		if(self->state == ST_IDLE)
+		{
+			self->sx = Player->sx;
+			self->sy = Player->sy - 100;
+		}
+
+		if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0 && self->state == ST_ENEMY)	/*Check for Player Collision*/
+		{
+			Player->health -= 1;
+			Player->vy = -15;
+			if((Player->sx + Player->bbox.x + (Player->bbox.w / 2)) < (self->sx + self->bbox.x + (self->bbox.w / 2)))
+				Player->vx = -15;
+			else Player->vx = 15;
+			Player->invuln = 30;
+		}
+	}
+	
+	if((self->health <= 0) && (self->state != ST_DEAD))	/*It died*/
+	{
+		self->health = 0;
+		self->vx = 0;
+		self->vy = -20;
+		self->state = ST_DEAD;
+		self->frame = 6;
+	}
+
+	switch(self->state)		/*Animations*/
+	{
+		case ST_DEAD:
+			self->vy += 2;
+			self->sy += self->vy;
+			if(self->sy >= 800)FreeEntity(self);
+			break;
+		case ST_DYING:
+			if(self->delay <= 0)
+			{
+				self->delay = 5;
+				if(self->frame > 0)
+					self->frame--;
+				else
+					self->state = ST_IDLE;
+			}
+			else self->delay--;
+			break;
+		case ST_ENEMY:
+			if(self->delay < 0)
+			{
+				ShootBolt(self->sx + 8, self->sy + 16);
+				self->delay = 30;
+			}
+			else if(self->delay == 0)
+					self->state = ST_DYING;
+				 else self->delay--;
+			break;
+		case ST_IDLE:
+			if(self->delay <= 0)
+			{
+				self->delay = 10;
+				if(self->frame < 5)
+					self->frame++;
+				else
+				{
+					self->state = ST_ENEMY;
+					self->delay = -1;
+				}
+			}
+			else self->delay--;
+			break;
+	}
+}
+
+Entity *ShootBolt(int x, int y)
+{
+	Entity *bolt;
+	bolt = NewEntity();
+	if(bolt == NULL)return bolt;
+	bolt->sprite = LoadSprite("images/bolt.png", 16, 16);
+	bolt->bbox.x = 0;
+	bolt->bbox.y = 0;
+	bolt->bbox.w = 16;
+	bolt->bbox.h = 16;
+	bolt->frame = 0;
+	bolt->sx = x;
+	bolt->sy = y;
+	bolt->vy = 5;
+	bolt->shown = 1;
+	bolt->delay = 2;
+	bolt->state = ST_ENEMY;
+	bolt->think = BoltThink;
+	bolt->owner = NULL;
+	return bolt;
+}
+
+void BoltThink(Entity *self)
+{
+	SDL_Rect b1, b2;
+	
+	/*Check for Collisions*/
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+
+	if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0)	/*Check for Player Collision*/
+	{
+		Player->health -= 1;
+		Player->vy = -15;
+		if((Player->sx + Player->bbox.x + (Player->bbox.w / 2)) < (self->sx + self->bbox.x + (self->bbox.w / 2)))
+			Player->vx = -15;
+		else Player->vx = 15;
+		Player->invuln = 30;
+	}
+
+	self->sy += self->vy;
+	if(self->sy > 800)FreeEntity(self);
+
+	if(self->delay <= 0)		/*Animations*/
+	{
+		self->delay = 1;
+		if(self->frame < 4)self->frame++;
+		else self->frame = 0;
+	}
+	else self->delay--;
 }
 
 Entity *BuildSnakePot(int x, int y, int i, int j)

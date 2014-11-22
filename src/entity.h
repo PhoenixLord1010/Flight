@@ -54,6 +54,10 @@ Entity *SpawnSnake(int x, int y, int i);			/*Snake enemy*/
 void SnakeThink(Entity *self);
 Entity *SpawnEye(int x, int y, int wave);			/*Eye enemy*/
 void EyeThink(Entity *self);
+Entity *SpawnCloud();								/*Cloud enemy*/
+void CloudThink(Entity *self);
+Entity *ShootBolt(int x, int y);					/*Cloud's lightning attack*/
+void BoltThink(Entity *self);
 Entity *BuildSnakePot(int x, int y, int i, int j);	/*Snake spawn point*/
 void PotThink(Entity *self);
 Entity *BuildTile(int x);							/*Ground*/

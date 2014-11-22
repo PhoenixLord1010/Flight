@@ -24,6 +24,19 @@ void RenderLevel(int level)
 			BuildTile(256);
 			BuildTile(512);
 			BuildTile(768);
+			SpawnCloud();
+			
+			CurrentSection++;
+		}
+	}
+	if(level == 1)
+	{
+		if(CurrentSection == 0)
+		{
+			BuildTile(0);
+			BuildTile(256);
+			BuildTile(512);
+			BuildTile(768);
 			BuildColumn(400, 600-64);
 			BuildColumn(800, 600-64);
 			BuildColumn(800, 600-128);
@@ -128,7 +141,7 @@ void RenderLevel(int level)
 		}
 	}
 
-	if(level == 1)
+	if(level == 2)
 	{
 		if(CurrentSection == 0)
 		{			
@@ -304,7 +317,7 @@ void UpdateLevel()
 		CurrentSection = csec;
 	}
 
-	if(player->sx >= (screen->w * 0.6) + offset)offset += player->sx - ((screen->w * 0.6) + offset);	/*Scroll Screen with Player*/
+	if(player->sx >= (screen->w * 0.6) + offset && CurrentLevel != 0)offset += player->sx - ((screen->w * 0.6) + offset);	/*Scroll Screen with Player*/
 
 	/*When the player reaches a certain point, load the next section*/
 	if(offset + screen->w >= 2028 && CurrentSection == 1)CurrentSection++;
@@ -356,7 +369,7 @@ void UpdateLevel()
 		return;
 	}
 	
-	if(CurrentLevel == 2)exit(1);	/*Win Condition*/
+	if(CurrentLevel == 3)exit(1);	/*Win Condition*/
 
 	RenderLevel(CurrentLevel);
 }

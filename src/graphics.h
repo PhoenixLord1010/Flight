@@ -25,12 +25,10 @@ typedef struct COORD_T
 
 typedef struct Sprite_T
 {
-	//GLuint image;
 	char filename[80];
 	SDL_Surface *surface;
 	int color1, color2, color3;
 	int w, h;				/*width and height of individual frames*/
-	Coord dimen;			/*width and height with gl coords*/
 	int framesperline;			/*default is 16*/
 	int used;				/*how many times a single sprite's been loaded*/
 	int loaded;				/*is a sprite being used at all*/
