@@ -24,7 +24,7 @@ void RenderLevel(int level)
 			BuildTile(256);
 			BuildTile(512);
 			BuildTile(768);
-			SpawnCloud();
+			SpawnPixie(1000);
 			
 			CurrentSection++;
 		}
@@ -317,7 +317,7 @@ void UpdateLevel()
 		CurrentSection = csec;
 	}
 
-	if(player->sx >= (screen->w * 0.6) + offset && CurrentLevel != 0)offset += player->sx - ((screen->w * 0.6) + offset);	/*Scroll Screen with Player*/
+	if(player->sx >= (screen->w * 0.6) + offset)offset += player->sx - ((screen->w * 0.6) + offset);	/*Scroll Screen with Player*/
 
 	/*When the player reaches a certain point, load the next section*/
 	if(offset + screen->w >= 2028 && CurrentSection == 1)CurrentSection++;

@@ -1008,6 +1008,107 @@ void BoltThink(Entity *self)
 	else self->delay--;
 }
 
+Entity *SpawnPixie(int x)
+{
+	Entity *pixie;
+	pixie = NewEntity();
+	if(pixie == NULL)return pixie;
+	pixie->sprite = LoadSprite("images/pixie.png",32,32);
+	pixie->bbox.x = 0;
+	pixie->bbox.y = 0;
+	pixie->bbox.w = 32;
+	pixie->bbox.h = 32;
+	pixie->frame = 0;
+	pixie->sx = x;
+	pixie->sy = Player->sy - 600;
+	pixie->vx = -2;
+	pixie->vy = 20;
+	pixie->shown = 1;
+	pixie->delay = 10;
+	pixie->busy = Player->sy;	/*How far down to go*/
+	pixie->health = 1;
+	pixie->healthmax = 1;
+	pixie->state = ST_ENEMY;
+	pixie->think = PixieThink;
+	pixie->owner = NULL;
+	return pixie;
+}
+
+void PixieThink(Entity *self)
+{
+	SDL_Rect b1, b2, xCol, yCol;
+	
+	/*Check for Collisions*/
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+	CheckCollisions(self, b1, &xCol, &yCol);
+
+	if(self->health > 0)
+	{	
+		if(self->sy <= self->busy)
+		{
+			self->vy -= 0.3;
+		}
+		else
+		{
+			self->vx = -20;
+			self->vy = 0;
+		}
+
+		self->sx += self->vx;
+		self->sy += self->vy;
+
+		if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0)	/*Check for Player Collision*/
+		{
+			Player->health -= 1;
+			Player->vy = -15;
+			if((Player->sx + Player->bbox.x + (Player->bbox.w / 2)) < (self->sx + self->bbox.x + (self->bbox.w / 2)))
+				Player->vx = -15;
+			else Player->vx = 15;
+			Player->invuln = 30;
+		}
+	}
+	
+	if((self->health <= 0) && (self->state != ST_DEAD))	/*It died*/
+	{
+		self->health = 0;
+		self->vx = 0;
+		self->vy = -20;
+		self->state = ST_DEAD;
+		self->frame = 2;
+	}
+
+	switch(self->state)		/*Animations*/
+	{
+		case ST_DEAD:
+			self->vy += 2;
+			self->sy += self->vy;
+			if(self->sy >= 800)FreeEntity(self);
+			break;
+		case ST_ENEMY:
+			if(self->delay <= 0)
+			{
+				if(self->sy < self->busy)self->delay = 6;
+				else self->delay = 2;
+				switch(self->frame - (3 * self->isRight))
+				{
+					case 0: self->frame = 1 + (3 * self->isRight);
+						break;
+					case 1: self->frame = 0 + (3 * self->isRight);
+						break;
+				}
+			}
+			else self->delay--;
+			break;
+	}
+}
+
 Entity *BuildSnakePot(int x, int y, int i, int j)
 {
 	Entity *pot;
