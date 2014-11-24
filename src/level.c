@@ -24,7 +24,10 @@ void RenderLevel(int level)
 			BuildTile(256);
 			BuildTile(512);
 			BuildTile(768);
-			SpawnPixie(1000);
+			BuildWall(0, 600-256);
+			//SpawnCloud();
+			//SpawnPixie(1000);
+			SpawnFrog(900, 600-28, 0);
 			
 			CurrentSection++;
 		}

@@ -1051,14 +1051,15 @@ void PixieThink(Entity *self)
 
 	if(self->health > 0)
 	{	
-		if(self->sy <= self->busy)
+		if(self->sy < self->busy && self->sy < Player->sy)
 		{
 			self->vy -= 0.3;
 		}
 		else
 		{
-			self->vx = -20;
+			self->vx = -15;
 			self->vy = 0;
+			self->busy = self->sy;
 		}
 
 		self->sx += self->vx;
@@ -1107,6 +1108,121 @@ void PixieThink(Entity *self)
 			else self->delay--;
 			break;
 	}
+}
+
+Entity *SpawnFrog(int x, int y, int i)
+{
+	Entity *frog;
+	frog = NewEntity();
+	if(frog == NULL)return frog;
+	frog->sprite = LoadSprite("images/frog.png",28,28);
+	frog->bbox.x = 2;
+	frog->bbox.y = 4;
+	frog->bbox.w = 24;
+	frog->bbox.h = 24;
+	frog->frame = 0 + (3 * i);
+	frog->sx = x;
+	frog->sy = y;
+	frog->vx = 4;
+	frog->vy = -15;
+	frog->shown = 1;
+	frog->delay = 10;	/*pauses between jumps for this many frames*/
+	frog->busy = 1;
+	frog->health = 1;
+	frog->healthmax = 1;
+	frog->state = ST_ENEMY;
+	frog->isRight = i;
+	frog->think = FrogThink;
+	frog->owner = NULL;
+	return frog;
+}
+
+void FrogThink(Entity *self)
+{
+	SDL_Rect b1, b2, xCol, yCol;
+	
+	/*Check for Collisions*/
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+	CheckCollisions(self, b1, &xCol, &yCol);
+
+	if(self->health > 0)
+	{
+		/*What to Do if Colliding*/
+		if(self->uCheck)
+		{
+			if(self->delay == 0)
+			{
+				self->busy = 1;
+				self->delay = 10;
+				self->vy = -15;
+			}
+			else 
+			{
+				self->busy = 0;
+				self->delay--;
+			}
+			self->sy = yCol.y - self->sprite->h;
+		}
+		else self->vy += 1;
+		if(self->lCheck)
+		{
+			self->isRight = 0;
+			self->frame -= 3;
+		}
+		if(self->rCheck)
+		{
+			self->isRight = 1;
+			self->frame += 3;
+		}
+		
+		if(self->isRight)		/*Move right*/
+			self->vx =  abs(self->vx);
+		else					/*Move left*/
+			self->vx = -1 * abs(self->vx);
+
+		self->sx += self->vx * self->busy;
+		self->sy += self->vy * self->busy;
+
+		if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0)	/*Check for Player Collision*/
+		{
+			Player->health -= 1;
+			Player->vy = -15;
+			if((Player->sx + Player->bbox.x + (Player->bbox.w / 2)) < (self->sx + self->bbox.x + (self->bbox.w / 2)))
+				Player->vx = -15;
+			else Player->vx = 15;
+			Player->invuln = 30;
+		}
+	}
+
+	if((self->health <= 0) && (self->state != ST_DEAD))	/*It died*/
+	{
+		self->health = 0;
+		self->vx = 0;
+		self->vy = -20;
+		self->state = ST_DEAD;
+		self->frame = 2 + (3 * self->isRight);
+	}
+
+	switch(self->state)		/*Animations*/
+	{
+		case ST_DEAD:
+			self->vy += 2;
+			self->sy += self->vy;
+			break;
+		case ST_ENEMY:
+			if(self->uCheck)self->frame = 0 + (3 * self->isRight);
+			else self->frame = 1 + (3 * self->isRight);
+			break;
+	}
+
+	if(self->sx + self->bbox.w < offset || self->sy > 800)FreeEntity(self);		/*When offscreen, free self*/
 }
 
 Entity *BuildSnakePot(int x, int y, int i, int j)
