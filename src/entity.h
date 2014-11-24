@@ -62,6 +62,8 @@ Entity *SpawnPixie(int x);							/*Pixie enemy*/
 void PixieThink(Entity *self);
 Entity *SpawnFrog(int x, int y, int i);				/*Frog enemy*/
 void FrogThink(Entity *self);
+Entity *SpawnDrill(int x, int y);					/*Drill enemy*/
+void DrillThink(Entity *self);
 Entity *BuildSnakePot(int x, int y, int i, int j);	/*Snake spawn point*/
 void PotThink(Entity *self);
 Entity *BuildTile(int x);							/*Ground*/

@@ -20,14 +20,17 @@ void RenderLevel(int level)
 	{
 		if(CurrentSection == 0)
 		{
+			SpawnDrill(400, 600);
+			
 			BuildTile(0);
 			BuildTile(256);
 			BuildTile(512);
 			BuildTile(768);
 			BuildWall(0, 600-256);
-			//SpawnCloud();
-			//SpawnPixie(1000);
+			SpawnCloud();
+			SpawnPixie(1000);
 			SpawnFrog(900, 600-28, 0);
+			
 			
 			CurrentSection++;
 		}

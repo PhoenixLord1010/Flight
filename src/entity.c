@@ -168,7 +168,7 @@ void CheckCollisions(Entity *self, SDL_Rect box1, SDL_Rect *xCollision, SDL_Rect
 						  }
 			}
 
-			if(self->state == ST_ENEMY && EntityList[i].state == ST_SPEAR)self->health--;	/*Enemy was hit*/
+			if(self->state == ST_ENEMY && EntityList[i].state == ST_SPEAR)self->invuln = 1;	/*Enemy was hit*/
 		}
 	}
 }
@@ -653,6 +653,7 @@ Entity *SpawnSnake(int x, int y, int i)
 	snake->delay = 1;
 	snake->health = 1;
 	snake->healthmax = 1;
+	snake->invuln = 0;
 	snake->state = ST_ENEMY;
 	snake->isRight = i;
 	snake->think = SnakeThink;
@@ -718,6 +719,8 @@ void SnakeThink(Entity *self)
 			else Player->vx = 15;
 			Player->invuln = 30;
 		}
+
+		if(self->invuln)self->health--;
 	}
 
 	if((self->health <= 0) && (self->state != ST_DEAD))	/*It died*/
@@ -773,6 +776,7 @@ Entity *SpawnEye(int x, int y, int wave)
 	eye->delay = 15 * wave;		/*In order to have the same wave, a group starts at the same place with slight delays for each member*/
 	eye->health = 1;
 	eye->healthmax = 1;
+	eye->invuln = 0;
 	eye->state = ST_ENEMY;
 	eye->isRight = 0;
 	eye->think = EyeThink;
@@ -811,6 +815,8 @@ void EyeThink(Entity *self)
 			else Player->vx = 15;
 			Player->invuln = 30;
 		}
+
+		if(self->invuln)self->health--;
 	}
 
 	if((self->health <= 0) && (self->state != ST_DEAD))	/*It died*/
@@ -856,6 +862,7 @@ Entity *SpawnCloud()
 	cloud->delay = 10;
 	cloud->health = 1;
 	cloud->healthmax = 1;
+	cloud->invuln = 0;
 	cloud->state = ST_IDLE;
 	cloud->think = CloudThink;
 	cloud->owner = NULL;
@@ -894,6 +901,8 @@ void CloudThink(Entity *self)
 			else Player->vx = 15;
 			Player->invuln = 30;
 		}
+
+		if(self->invuln)self->health--;
 	}
 	
 	if((self->health <= 0) && (self->state != ST_DEAD))	/*It died*/
@@ -1028,6 +1037,7 @@ Entity *SpawnPixie(int x)
 	pixie->busy = Player->sy;	/*How far down to go*/
 	pixie->health = 1;
 	pixie->healthmax = 1;
+	pixie->invuln = 0;
 	pixie->state = ST_ENEMY;
 	pixie->think = PixieThink;
 	pixie->owner = NULL;
@@ -1074,6 +1084,8 @@ void PixieThink(Entity *self)
 			else Player->vx = 15;
 			Player->invuln = 30;
 		}
+
+		if(self->invuln)self->health--;
 	}
 	
 	if((self->health <= 0) && (self->state != ST_DEAD))	/*It died*/
@@ -1130,6 +1142,7 @@ Entity *SpawnFrog(int x, int y, int i)
 	frog->busy = 1;
 	frog->health = 1;
 	frog->healthmax = 1;
+	frog->invuln = 0;
 	frog->state = ST_ENEMY;
 	frog->isRight = i;
 	frog->think = FrogThink;
@@ -1199,6 +1212,8 @@ void FrogThink(Entity *self)
 			else Player->vx = 15;
 			Player->invuln = 30;
 		}
+
+		if(self->invuln)self->health--;
 	}
 
 	if((self->health <= 0) && (self->state != ST_DEAD))	/*It died*/
@@ -1219,6 +1234,177 @@ void FrogThink(Entity *self)
 		case ST_ENEMY:
 			if(self->uCheck)self->frame = 0 + (3 * self->isRight);
 			else self->frame = 1 + (3 * self->isRight);
+			break;
+	}
+
+	if(self->sx + self->bbox.w < offset || self->sy > 800)FreeEntity(self);		/*When offscreen, free self*/
+}
+
+Entity *SpawnDrill(int x, int y)
+{
+	Entity *drill;
+	drill = NewEntity();
+	if(drill == NULL)return drill;
+	drill->sprite = LoadSprite("images/drill.png",32,30);
+	drill->bbox.x = 0;
+	drill->bbox.y = 0;
+	drill->bbox.w = 32;
+	drill->bbox.h = 30;
+	drill->frame = 0;
+	drill->sx = x;
+	drill->sy = y;
+	drill->vx = -4;
+	drill->vy = 0;
+	drill->shown = 1;
+	drill->delay = 1;
+	drill->busy = 0;
+	drill->health = 1;
+	drill->healthmax = 1;
+	drill->invuln = 0;
+	drill->state = ST_ENEMY;
+	drill->isRight = 0;
+	drill->think = DrillThink;
+	drill->owner = NULL;
+	return drill;
+}
+
+void DrillThink(Entity *self)
+{
+	SDL_Rect b1, b2, b0, xCol, yCol;
+	int uCheck2;
+	float speed = 4;
+
+	/*Check for Collisions*/
+	if(self->isRight)b0.x = self->sx + self->bbox.x + self->bbox.w;
+	else b0.x = self->sx + self->bbox.x - self->bbox.w;
+	b0.y = self->sy + self->bbox.y;
+	b0.w = self->bbox.w;
+	b0.h = self->bbox.h;
+	CheckCollisions(self, b0, &xCol, &yCol);
+	uCheck2 = self->uCheck;
+	
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+	CheckCollisions(self, b1, &xCol, &yCol);
+
+	if(self->health > 0)
+	{
+		/*What to Do if Colliding*/
+		if(self->uCheck)
+		{
+			if(self->sy > yCol.y - self->bbox.h)
+				self->vy = -1;
+			else 
+			{
+				self->sy = yCol.y - self->bbox.h;
+				self->vy = 0;
+				self->busy = 1;
+			}
+		}
+		if(self->lCheck)
+		{
+			self->isRight = 0;
+			self->vx = -1 * abs(self->vx);
+		}
+		if(self->rCheck)
+		{
+			self->isRight = 1;
+			self->vx = abs(self->vx);
+		}
+
+		if(!uCheck2)		/*Stops self from going off edges*/
+		{
+			if(self->isRight)
+			{
+				self->isRight = 0;
+				self->vx = -1 * abs(self->vx);
+			}
+			else 
+			{
+				self->isRight = 1;
+				self->vx = abs(self->vx);
+			}
+		}
+		
+		if(self->isRight)		/*Move right*/
+		{
+			if(self->vx < speed)
+				self->vx++;
+			if(self->vx > speed)
+				self->vx--;
+		}
+		else					/*Move left*/
+		{
+			if(self->vx > -speed)
+				self->vx--;
+			if(self->vx < -speed)
+				self->vx++;
+		}
+
+		if(self->vy <= 13 && !self->uCheck)	/*Gravity*/
+		{
+			if(self->isRight)self->vx = 2;
+			else self->vx = -2;
+			self->vy += 2;
+		}
+
+		self->sx += self->vx * self->busy;
+		self->sy += self->vy;
+
+		if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0)	/*Check for Player Collision*/
+		{
+			Player->health -= 1;
+			Player->vy = -15;
+			if((Player->sx + Player->bbox.x + (Player->bbox.w / 2)) < (self->sx + self->bbox.x + (self->bbox.w / 2)))
+				Player->vx = -15;
+			else Player->vx = 15;
+			Player->invuln = 30;
+		}
+
+		if(self->invuln)
+		{
+			if(self->sy > Player->sy + Player->sprite->h)self->health--;
+			if(self->sx > Player->sx)self->vx = 7;
+			else self->vx = -7;
+			self->invuln = 0;
+		}
+	}
+
+	if((self->health <= 0) && (self->state != ST_DEAD))	/*It died*/
+	{
+		self->health = 0;
+		self->vx = 0;
+		self->vy = -20;
+		self->state = ST_DEAD;
+		self->frame = 2;
+	}
+
+	switch(self->state)		/*Animations*/
+	{
+		case ST_DEAD:
+			self->vy += 2;
+			self->sy += self->vy;
+			break;
+		case ST_ENEMY:
+			if(self->delay <= 0)
+			{
+				if(!self->busy)self->delay = 6;
+				else self->delay = 2;
+				switch(self->frame)
+				{
+					case 0: self->frame = 1;
+						break;
+					case 1: self->frame = 0;
+						break;
+				}
+			}
+			else self->delay--;
 			break;
 	}
 
