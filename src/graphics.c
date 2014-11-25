@@ -15,7 +15,8 @@ Sprite SpriteList[MaxSprites];
 Uint32 NOW;
 
 int NumSprites;
-float offset;
+float offset;	//left side of screen
+float onset;	//as far back left as you can scroll
 
 Uint32 rmask,gmask,bmask,amask;
 ScreenData S_Data;

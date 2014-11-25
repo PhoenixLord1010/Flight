@@ -64,6 +64,10 @@ Entity *SpawnFrog(int x, int y, int i);				/*Frog enemy*/
 void FrogThink(Entity *self);
 Entity *SpawnDrill(int x, int y);					/*Drill enemy*/
 void DrillThink(Entity *self);
+Entity *SpawnBall(int x, int y);					/*Ball enemy*/
+void BallThink(Entity *self);
+Entity *ShootLaser(int x, int y);					/*Ball's laser attack*/
+void LaserThink(Entity *self);
 Entity *BuildSnakePot(int x, int y, int i, int j);	/*Snake spawn point*/
 void PotThink(Entity *self);
 Entity *BuildTile(int x);							/*Ground*/

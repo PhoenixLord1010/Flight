@@ -3,6 +3,7 @@
 
 extern SDL_Surface *screen;
 extern float offset;
+extern float onset;
 
 int CurrentLevel = 0;
 int CurrentSection = 0;
@@ -20,17 +21,17 @@ void RenderLevel(int level)
 	{
 		if(CurrentSection == 0)
 		{
-			SpawnDrill(400, 600);
+			//SpawnDrill(400, 600);
 			
 			BuildTile(0);
 			BuildTile(256);
 			BuildTile(512);
 			BuildTile(768);
 			BuildWall(0, 600-256);
-			SpawnCloud();
-			SpawnPixie(1000);
-			SpawnFrog(900, 600-28, 0);
-			
+			//SpawnCloud();
+			//SpawnPixie(1000);
+			//SpawnFrog(900, 600-28, 0);
+			SpawnBall(900, 300);
 			
 			CurrentSection++;
 		}
@@ -320,10 +321,14 @@ void UpdateLevel()
 	{
 		player = MakePlayer(cx, cy);
 		offset = coff;
+		onset = coff;
 		CurrentSection = csec;
 	}
-
-	if(player->sx >= (screen->w * 0.6) + offset)offset += player->sx - ((screen->w * 0.6) + offset);	/*Scroll Screen with Player*/
+	
+	/*Scroll Screen with Player*/
+	if(player->sx >= (screen->w * 0.6) + offset)offset += player->sx - ((screen->w * 0.6) + offset);					/*Right*/
+	if(player->sx <= (screen->w * 0.3) + offset && offset > onset)offset -= ((screen->w * 0.3) + offset) - player->sx;		/*Left*/
+	if(onset + 1024 < offset)onset = offset - 1024;
 
 	/*When the player reaches a certain point, load the next section*/
 	if(offset + screen->w >= 2028 && CurrentSection == 1)CurrentSection++;
