@@ -31,7 +31,10 @@ void RenderLevel(int level)
 			//SpawnCloud();
 			//SpawnPixie(1000);
 			//SpawnFrog(900, 600-28, 0);
-			SpawnBall(900, 300);
+			//SpawnBall(900, 300);
+			
+			BuildCloudPlatform(400, 500);
+			BuildCloudPlatform(500, 400);
 			
 			CurrentSection++;
 		}

@@ -148,22 +148,22 @@ void CheckCollisions(Entity *self, SDL_Rect box1, SDL_Rect *xCollision, SDL_Rect
 		{
 			if(EntityList[i].state == ST_TILE)		/*Collision with the world*/
 			{
-				if((abs((box1.y + box1.h) - box2.y) <= abs((box1.x + box1.w) - box2.x)) && (abs((box1.y + box1.h) - box2.y) <= abs((box2.x + box2.w) - box1.x)) && (abs((box1.y + box1.h) - box2.y) <= abs((box2.y + box2.h) - box1.y)))
+				if((abs((box1.y + box1.h) - box2.y) <= abs((box1.x + box1.w) - box2.x)) && (abs((box1.y + box1.h) - box2.y) <= abs((box2.x + box2.w) - box1.x)) && (3 * abs((box1.y + box1.h) - box2.y) <= abs((box2.y + box2.h) - box1.y)) && (self->vy - EntityList[i].vy) >= 0)
 				{
 					self->uCheck = 1;
 					*yCollision = box2;
 				}
-				else if((abs((box1.x + box1.w) - box2.x) <= abs((box2.x + box2.w) - box1.x)) && (abs((box1.x + box1.w) - box2.x) <= abs((box2.y + box2.h) - box1.y)))
+				else if((abs((box1.x + box1.w) - box2.x) <= abs((box2.x + box2.w) - box1.x)) && (abs((box1.x + box1.w) - box2.x) <= abs((box2.y + box2.h) - box1.y)) && ((self->vx - EntityList[i].vx) >= 0) && !EntityList[i].invuln)
 					 {	 
 						 self->lCheck = 1;
 						 *xCollision = box2;
 					 }
-					 else if((abs((box2.x + box2.w) - box1.x) <= abs((box2.y + box2.h) - box1.y)))
+					 else if((abs((box2.x + box2.w) - box1.x) <= abs((box2.y + box2.h) - box1.y)) && ((self->vx - EntityList[i].vx) < 0) && !EntityList[i].invuln)
 						  {	  
 							  self->rCheck = 1;
 							  *xCollision = box2;
 						  }
-						  else 
+						  else if(!EntityList[i].invuln)
 						  {
 							  self->dCheck = 1;
 							  *yCollision = box2;
@@ -1788,6 +1788,27 @@ Entity *BuildColumn(int x, int y)
 	column->owner = NULL;
 	return column;
 }
+
+Entity *BuildCloudPlatform(int x, int y)
+{
+	Entity *plat;
+	plat = NewEntity();
+	if(plat == NULL)return plat;
+	plat->sprite = LoadSprite("images/cloudplatform.png", 192, 8);
+	plat->shown = 1;
+	plat->sx = x;
+	plat->sy = y;
+	plat->bbox.x = 0;
+	plat->bbox.y = 4;
+	plat->bbox.w = 192;
+	plat->bbox.h = 4;
+	plat->invuln = 1;
+	plat->state = ST_TILE;
+	plat->think = TileThink;
+	plat->owner = NULL;
+	return plat;
+}
+
 
 void TileThink(Entity *self)
 {
