@@ -305,7 +305,7 @@ void PlayerThink(Entity *self)
 
 		if((self->vx == 0) && self->uCheck)	/*Standing Still*/
 			self->state = ST_IDLE;
-
+		
 		if(uCheck2 && !self->uCheck)	/*Walking off Edges*/
 		{
 			if(self->state != ST_DASH)
@@ -318,13 +318,13 @@ void PlayerThink(Entity *self)
 		/*Player Inputs*/
 		if(self->invuln <= 15)
 		{
-			if(isKeyHeld(SDLK_e) && !self->rCheck && self->state != ST_DASH)					/*Move left*/
+			if(isKeyHeld(SDLK_e) && !self->rCheck)					/*Move left*/
 			{
 				if(self->busy <= 7)self->isRight = 0;
 				if(self->vx > -8)self->vx -= 4;
 				if(self->uCheck && self->state != ST_DASH)self->state = ST_WALK;
 			}
-			if(isKeyHeld(SDLK_t) && !self->lCheck && self->state != ST_DASH)					/*Move right*/
+			if(isKeyHeld(SDLK_t) && !self->lCheck)					/*Move right*/
 			{
 				if(self->busy <= 7)self->isRight = 1;
 				if(self->vx < 8)self->vx += 4;
@@ -381,7 +381,7 @@ void PlayerThink(Entity *self)
 		if(isKeyPressed(SDLK_KP8) && self->busy <= 0)self->busy = 15;	/*Up*/
 		if(isKeyPressed(SDLK_KP2) && self->busy <= 0)self->busy = 15;	/*Down*/
 
-		if((isKeyPressed(SDLK_KP_PLUS) || isKeyPressed(SDLK_KP_ENTER)) && self->busy <= 0 && Player->uCheck == 1)	/*Dash*/
+		if((isKeyPressed(SDLK_KP_PLUS) || isKeyPressed(SDLK_KP_ENTER)) && self->busy <= 0 && Player->uCheck)	/*Dash*/
 		{
 			if(self->isRight)
 				Player->vx = 30;
@@ -487,7 +487,7 @@ void PlayerThink(Entity *self)
 			}
 			else self->delay--;
 			self->uCheck = 1;
-			if(self->busy == 1)self->state = ST_IDLE;
+			if(self->busy == 1 && uCheck2)self->state = ST_IDLE;
 			break;
 	}
 
@@ -1795,7 +1795,7 @@ Entity *BuildCloudPlatform(int x, int y)
 	plat->bbox.y = 4;
 	plat->bbox.w = 192;
 	plat->bbox.h = 4;
-	plat->invuln = 1;
+	plat->invuln = 1;			/*Can be jumped through*/
 	plat->state = ST_TILE;
 	plat->think = TileThink;
 	plat->owner = NULL;
@@ -1874,6 +1874,51 @@ void PlatThink(Entity *self)
 	if(Collide(b1,b2) && Player->uCheck)
 		Player->sx += self->vx;
 	
+	if(self->sx + self->bbox.w < onset)FreeEntity(self);
+}
+
+Entity *BuildSpring(int x, int y)
+{
+	Entity *spring;
+	spring = NewEntity();
+	if(spring == NULL)return spring;
+	spring->sprite = LoadSprite("images/spring.png", 48, 48);
+	spring->shown = 1;
+	spring->sx = x;
+	spring->sy = y;
+	spring->bbox.x = 0;
+	spring->bbox.y = 12;
+	spring->bbox.w = 48;
+	spring->bbox.h = 36;
+	spring->state = ST_TILE;
+	spring->think = SpringThink;
+	spring->owner = NULL;
+	return spring;
+}
+
+void SpringThink(Entity *self)
+{
+	SDL_Rect b1, b2;
+	
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+	
+	if(Collide(b1,b2) && Player->uCheck && b2.y + b2.h <= self->sy + self->bbox.y)
+	{
+		Player->vy = -30;
+		self->frame = 1;
+		self->delay = 5;
+	}
+
+	if(self->delay > 0)self->delay--;
+	else self->frame = 0;
+
 	if(self->sx + self->bbox.w < onset)FreeEntity(self);
 }
 

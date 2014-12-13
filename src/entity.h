@@ -79,6 +79,8 @@ Entity *BuildCloudPlatform(int x, int y);			/*Cloud platforms*/
 void TileThink(Entity *self);
 Entity *BuildMovingPlatform(int x, int y, int a, int b);	/*Moving platforms*/
 void PlatThink(Entity *self);
+Entity *BuildSpring(int x, int y);					/*Springs*/
+void SpringThink(Entity *self);
 
 /*Keyboard Input Stuff*/
 void InitKeyboard();

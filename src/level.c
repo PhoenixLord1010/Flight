@@ -35,8 +35,10 @@ void RenderLevel(int level)
 			
 			//BuildCloudPlatform(400, 500);
 			//BuildCloudPlatform(525, 400);
-			BuildMovingPlatform(400, 500, 600, 500);
-			BuildMovingPlatform(200, 400, 500, 400);
+			//BuildMovingPlatform(400, 500, 600, 500);
+			//BuildMovingPlatform(200, 400, 500, 400);
+			BuildSpring(24, 600-48);
+			BuildSpring(124, 600-48);
 
 			CurrentSection++;
 		}
