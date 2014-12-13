@@ -34,7 +34,6 @@ void InitEntityList()
 		if(EntityList[i].sprite != NULL)FreeSprite(EntityList[i].sprite);
 		EntityList[i].sprite = NULL;
 		EntityList[i].owner = NULL;
-		
 	}
 	memset(EntityList, 0, sizeof(Entity) * MAXENTITIES);
 }
@@ -73,6 +72,7 @@ Entity *NewEntity()
 			memset(&EntityList[i], 0, sizeof(Entity));
 			EntityList[i].used = 1;
 			EntityList[i].shown = 1;
+			EntityList[i].invuln = 0;
 			NumEnts++;
 			return &EntityList[i];
 		}
@@ -127,7 +127,7 @@ int Collide(SDL_Rect box1, SDL_Rect box2)
 	return 0;
 }
 
-void CheckCollisions(Entity *self, SDL_Rect box1, SDL_Rect *xCollision, SDL_Rect *yCollision)
+void CheckCollisions(Entity *self, SDL_Rect box1, SDL_Rect *xCollision, SDL_Rect *yCollision, float *yMovement)
 {
 	int i = 0;
 	SDL_Rect box2;
@@ -148,22 +148,23 @@ void CheckCollisions(Entity *self, SDL_Rect box1, SDL_Rect *xCollision, SDL_Rect
 		{
 			if(EntityList[i].state == ST_TILE)		/*Collision with the world*/
 			{
-				if((abs((box1.y + box1.h) - box2.y) <= abs((box1.x + box1.w) - box2.x)) && (abs((box1.y + box1.h) - box2.y) <= abs((box2.x + box2.w) - box1.x)) && (3 * abs((box1.y + box1.h) - box2.y) <= abs((box2.y + box2.h) - box1.y)) && (self->vy - EntityList[i].vy) >= 0)
+				if((abs((box1.y + box1.h) - box2.y) <= abs((box1.x + box1.w) - box2.x)) && (abs((box1.y + box1.h) - box2.y) <= abs((box2.x + box2.w) - box1.x)) && (1 * abs((box1.y + box1.h) - box2.y) <= abs((box2.y + box2.h) - box1.y)) && (self->vy - EntityList[i].vy) >= 0)
 				{
 					self->uCheck = 1;
 					*yCollision = box2;
+					*yMovement = EntityList[i].vy;
 				}
 				else if((abs((box1.x + box1.w) - box2.x) <= abs((box2.x + box2.w) - box1.x)) && (abs((box1.x + box1.w) - box2.x) <= abs((box2.y + box2.h) - box1.y)) && ((self->vx - EntityList[i].vx) >= 0) && !EntityList[i].invuln)
 					 {	 
 						 self->lCheck = 1;
 						 *xCollision = box2;
 					 }
-					 else if((abs((box2.x + box2.w) - box1.x) <= abs((box2.y + box2.h) - box1.y)) && ((self->vx - EntityList[i].vx) < 0) && !EntityList[i].invuln)
+					 else if((abs((box2.x + box2.w) - box1.x) <= abs((box2.y + box2.h) - box1.y)) && ((self->vx - EntityList[i].vx) <= 0) && !EntityList[i].invuln)
 						  {	  
 							  self->rCheck = 1;
 							  *xCollision = box2;
 						  }
-						  else if(!EntityList[i].invuln)
+						  else if((self->vy - EntityList[i].vy) <= 0 && !EntityList[i].invuln)
 						  {
 							  self->dCheck = 1;
 							  *yCollision = box2;
@@ -197,7 +198,6 @@ Entity *MakePlayer(int x, int y)
 	player->think = PlayerThink;
 	player->health = 5;
 	player->healthmax = 5;
-	player->invuln = 0;
 	player->owner = player;
 	Player = player;
 	MakeSpear();
@@ -209,6 +209,7 @@ void PlayerThink(Entity *self)
 	/*Collision Stuff*/
 	int i = 0;
 	SDL_Rect b1, xCol, yCol;
+	float yMov;
 	
 	/*Spear Stuff*/
 	int sFrame;
@@ -224,7 +225,7 @@ void PlayerThink(Entity *self)
 			b1.y = self->sy + self->bbox.y + self->vy/1.5;
 			b1.w = self->bbox.w;
 			b1.h = self->bbox.h;
-			CheckCollisions(self, b1, &xCol, &yCol);
+			CheckCollisions(self, b1, &xCol, &yCol, &yMov);
 			i++;
 		}
 		while((i < 61) && (self->lCheck != 1 && self->rCheck != 1));
@@ -235,7 +236,7 @@ void PlayerThink(Entity *self)
 		b1.y = self->sy + self->bbox.y + self->vy/1.5;
 		b1.w = self->bbox.w;
 		b1.h = self->bbox.h;
-		CheckCollisions(self, b1, &xCol, &yCol);
+		CheckCollisions(self, b1, &xCol, &yCol, &yMov);
 	}
 
 	if(!self->isRight && self->state != ST_DYING)self->frame -= 8;	/*Direction Calculation*/
@@ -274,12 +275,12 @@ void PlayerThink(Entity *self)
 		/*What to Do if Colliding*/
 		if(self->uCheck)
 		{
-			self->vy = 0;
+			self->vy = yMov;
 			self->sy = yCol.y - self->bbox.h;
 		}
 		if(self->dCheck)
 		{
-			self->vy = 1;
+			self->vy = 2;
 			self->sy = yCol.y + yCol.h;
 		}
 		if(self->lCheck)
@@ -302,7 +303,7 @@ void PlayerThink(Entity *self)
 		self->sx += self->vx;
 		self->sy += self->vy;
 
-		if((self->vx == 0) && (self->vy == 0) && self->uCheck)	/*Standing Still*/
+		if((self->vx == 0) && self->uCheck)	/*Standing Still*/
 			self->state = ST_IDLE;
 
 		if(uCheck2 && !self->uCheck)	/*Walking off Edges*/
@@ -330,7 +331,7 @@ void PlayerThink(Entity *self)
 				if(self->uCheck && self->state != ST_DASH)self->state = ST_WALK;
 			}
 
-			if(isKeyPressed(SDLK_KP0) && self->vy >= 0 && self->state != ST_JUMP2)	/*Jumps*/
+			if(isKeyPressed(SDLK_KP0) && self->vy >= 0 && self->state != ST_JUMP2)			/*Jumps*/
 			{
 				if(self->state == ST_JUMP2)self->vy = -30;
 				else self->vy = -20;
@@ -406,7 +407,6 @@ void PlayerThink(Entity *self)
 	}
 	
 	if(self->sy >= 800)		/*How you actually die*/
-
 		self->state = ST_DEAD;
 	
 
@@ -655,7 +655,6 @@ Entity *SpawnSnake(int x, int y, int i)
 	snake->delay = 1;
 	snake->health = 1;
 	snake->healthmax = 1;
-	snake->invuln = 0;
 	snake->state = ST_ENEMY;
 	snake->isRight = i;
 	snake->think = SnakeThink;
@@ -676,7 +675,7 @@ void SnakeThink(Entity *self)
 	b2.y = Player->sy + Player->bbox.y;
 	b2.w = Player->bbox.w;
 	b2.h = Player->bbox.h;
-	CheckCollisions(self, b1, &xCol, &yCol);
+	CheckCollisions(self, b1, &xCol, &yCol, 0);
 
 	if(self->health > 0)
 	{
@@ -778,7 +777,6 @@ Entity *SpawnEye(int x, int y, int wave)
 	eye->delay = 15 * wave;		/*In order to have the same wave, a group starts at the same place with slight delays for each member*/
 	eye->health = 1;
 	eye->healthmax = 1;
-	eye->invuln = 0;
 	eye->state = ST_ENEMY;
 	eye->isRight = 0;
 	eye->think = EyeThink;
@@ -799,7 +797,7 @@ void EyeThink(Entity *self)
 	b2.y = Player->sy + Player->bbox.y;
 	b2.w = Player->bbox.w;
 	b2.h = Player->bbox.h;
-	CheckCollisions(self, b1, &xCol, &yCol);
+	CheckCollisions(self, b1, &xCol, &yCol, 0);
 
 	if(self->health > 0 && self->delay <= 0)
 	{	
@@ -864,7 +862,6 @@ Entity *SpawnCloud()
 	cloud->delay = 10;
 	cloud->health = 1;
 	cloud->healthmax = 1;
-	cloud->invuln = 0;
 	cloud->state = ST_IDLE;
 	cloud->think = CloudThink;
 	cloud->owner = NULL;
@@ -886,7 +883,7 @@ void CloudThink(Entity *self)
 		b2.y = Player->sy + Player->bbox.y;
 		b2.w = Player->bbox.w;
 		b2.h = Player->bbox.h;
-		CheckCollisions(self, b1, &xCol, &yCol);
+		CheckCollisions(self, b1, &xCol, &yCol, 0);
 		
 		if(self->state == ST_IDLE)
 		{
@@ -1039,7 +1036,6 @@ Entity *SpawnPixie(int x)
 	pixie->busy = Player->sy;	/*How far down to go*/
 	pixie->health = 1;
 	pixie->healthmax = 1;
-	pixie->invuln = 0;
 	pixie->state = ST_ENEMY;
 	pixie->think = PixieThink;
 	pixie->owner = NULL;
@@ -1059,7 +1055,7 @@ void PixieThink(Entity *self)
 	b2.y = Player->sy + Player->bbox.y;
 	b2.w = Player->bbox.w;
 	b2.h = Player->bbox.h;
-	CheckCollisions(self, b1, &xCol, &yCol);
+	CheckCollisions(self, b1, &xCol, &yCol, 0);
 
 	if(self->health > 0)
 	{	
@@ -1144,7 +1140,6 @@ Entity *SpawnFrog(int x, int y, int i)
 	frog->busy = 1;
 	frog->health = 1;
 	frog->healthmax = 1;
-	frog->invuln = 0;
 	frog->state = ST_ENEMY;
 	frog->isRight = i;
 	frog->think = FrogThink;
@@ -1165,7 +1160,7 @@ void FrogThink(Entity *self)
 	b2.y = Player->sy + Player->bbox.y;
 	b2.w = Player->bbox.w;
 	b2.h = Player->bbox.h;
-	CheckCollisions(self, b1, &xCol, &yCol);
+	CheckCollisions(self, b1, &xCol, &yCol, 0);
 
 	if(self->health > 0)
 	{
@@ -1262,7 +1257,6 @@ Entity *SpawnDrill(int x, int y)
 	drill->busy = 0;
 	drill->health = 1;
 	drill->healthmax = 1;
-	drill->invuln = 0;
 	drill->state = ST_ENEMY;
 	drill->isRight = 0;
 	drill->think = DrillThink;
@@ -1285,7 +1279,7 @@ void DrillThink(Entity *self)
 		b0.w = self->bbox.w;
 		b0.h = self->bbox.h;
 		self->state = ST_IDLE;
-		CheckCollisions(self, b0, &xCol, &yCol);
+		CheckCollisions(self, b0, &xCol, &yCol, 0);
 		uCheck2 = self->uCheck;
 	
 		b1.x = self->sx + self->bbox.x;
@@ -1297,7 +1291,7 @@ void DrillThink(Entity *self)
 		b2.w = Player->bbox.w;
 		b2.h = Player->bbox.h;
 		self->state = ST_ENEMY;
-		CheckCollisions(self, b1, &xCol, &yCol);
+		CheckCollisions(self, b1, &xCol, &yCol, 0);
 
 		/*What to Do if Colliding*/
 		if(self->uCheck)
@@ -1434,7 +1428,6 @@ Entity *SpawnBall(int x, int y)
 	ball->delay = 10;
 	ball->health = 1;
 	ball->healthmax = 1;
-	ball->invuln = 0;
 	ball->state = ST_ENEMY;
 	ball->think = BallThink;
 	ball->owner = NULL;
@@ -1458,7 +1451,7 @@ void BallThink(Entity *self)
 		b2.y = Player->sy + Player->bbox.y;
 		b2.w = Player->bbox.w;
 		b2.h = Player->bbox.h;
-		CheckCollisions(self, b1, &xCol, &yCol);
+		CheckCollisions(self, b1, &xCol, &yCol, 0);
 		
 		if(self->state == ST_ENEMY)
 		{
@@ -1809,9 +1802,78 @@ Entity *BuildCloudPlatform(int x, int y)
 	return plat;
 }
 
-
 void TileThink(Entity *self)
 {
+	if(self->sx + self->bbox.w < onset)FreeEntity(self);
+}
+
+Entity *BuildMovingPlatform(int x, int y, int a, int b)
+{
+	Entity *plat;
+	plat = NewEntity();
+	if(plat == NULL)return plat;
+	plat->sprite = LoadSprite("images/movingplatform.png", 64, 16);
+	plat->shown = 1;
+	plat->sx = x;
+	plat->sy = y;
+	plat->bbox.x = 0;
+	plat->bbox.y = 0;
+	plat->bbox.w = 64;
+	plat->bbox.h = 16;
+	plat->uCheck = x;			/*Point 1's x position*/
+	plat->dCheck = y;			/*Point 1's y position*/
+	plat->lCheck = a;			/*Point 2's x position*/
+	plat->rCheck = b;			/*Point 2's y position*/
+	plat->isRight = 1;
+	plat->state = ST_TILE;
+	plat->think = PlatThink;
+	plat->owner = NULL;
+	return plat;
+}
+
+void PlatThink(Entity *self)
+{
+	SDL_Rect b1, b2;
+	float px, py, pz, hyp;
+	float speed = 2;
+
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+	
+	if(self->isRight)
+	{
+		px = self->lCheck - self->sx;
+		py = self->rCheck - self->sy;
+	}
+	else
+	{
+		px = self->uCheck - self->sx;
+		py = self->dCheck - self->sy;
+	}
+
+	pz = sqrt((px * px) + (py * py));
+	if(pz != 0)hyp = speed / pz;
+	else hyp = 0;
+	self->vx = px * hyp;
+	self->vy = py * hyp;
+	if(pz < 5)
+		if(self->isRight)
+			self->isRight = 0;
+		else
+			self->isRight = 1;
+
+	self->sx += self->vx;
+	self->sy += self->vy;
+
+	if(Collide(b1,b2) && Player->uCheck)
+		Player->sx += self->vx;
+	
 	if(self->sx + self->bbox.w < onset)FreeEntity(self);
 }
 

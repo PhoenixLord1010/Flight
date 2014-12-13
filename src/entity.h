@@ -75,8 +75,10 @@ Entity *BuildSmallTile(int x);						/*Also ground*/
 Entity *BuildPlatform(int x, int y);				/*Platforms*/
 Entity *BuildWall(int x, int y);					/*Walls*/
 Entity *BuildColumn(int x, int y);					/*Columns*/
-Entity *BuildCloudPlatform(int x, int y);			/*Cloud Platforms*/
+Entity *BuildCloudPlatform(int x, int y);			/*Cloud platforms*/
 void TileThink(Entity *self);
+Entity *BuildMovingPlatform(int x, int y, int a, int b);	/*Moving platforms*/
+void PlatThink(Entity *self);
 
 /*Keyboard Input Stuff*/
 void InitKeyboard();
