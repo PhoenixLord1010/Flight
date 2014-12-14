@@ -81,6 +81,10 @@ Entity *BuildMovingPlatform(int x, int y, int a, int b);	/*Moving platforms*/
 void PlatThink(Entity *self);
 Entity *BuildSpring(int x, int y);					/*Springs*/
 void SpringThink(Entity *self);
+Entity *BuildSpikeWall(int x, int a, int i);		/*Spike Walls*/
+void WallThink(Entity *self);
+Entity *BuildSpikes(int x, int y, int i, int j);	/*Spikes*/
+void SpikeThink(Entity *self);
 
 /*Keyboard Input Stuff*/
 void InitKeyboard();
