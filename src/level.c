@@ -5,7 +5,7 @@ extern SDL_Surface *screen;
 extern float offset;
 extern float onset;
 
-int CurrentLevel = 0;
+int CurrentLevel = 4;
 int CurrentSection = 0;
 int lives = 3;
 int delay = 30;
@@ -21,7 +21,7 @@ void RenderLevel(int level)
 	{
 		if(CurrentSection == 0)
 		{
-			//SpawnDrill(400, 600);
+			SpawnDrill(400, 600);
 			
 			BuildTile(0);
 			BuildTile(256);
@@ -29,12 +29,12 @@ void RenderLevel(int level)
 			BuildTile(768);
 			BuildWall(0, 600-256);
 			//SpawnCloud();
-			//SpawnPixie(1000);
+			//SpawnPixie(1200);
 			//SpawnFrog(900, 600-28, 0);
 			//SpawnBall(900, 300);
 			
-			//BuildCloudPlatform(400, 300);
-			//BuildCloudPlatform(525, 200);
+			//BuildCloudPlatform(300, 350);
+			//BuildCloudPlatform(425, 250);
 			//BuildMovingPlatform(400, 500, 600, 500);
 			//BuildMovingPlatform(200, 400, 500, 400);
 			//BuildSpring(24, 600-48);
@@ -52,6 +52,7 @@ void RenderLevel(int level)
 	{
 		if(CurrentSection == 0)
 		{
+			BuildSmallTile(-64);
 			BuildTile(0);
 			BuildTile(256);
 			BuildTile(512);
@@ -62,14 +63,18 @@ void RenderLevel(int level)
 			
 			SpawnSnake(600, 600-32, 0);
 
+			CurrentSection++;
+		}
+		if(CurrentSection == 2)
+		{
 			BuildTile(1024);
 			BuildTile(1408);
 			BuildTile(1536);
 			BuildTile(1792);
-			
+
 			CurrentSection++;
 		}
-		if(CurrentSection == 2)
+		if(CurrentSection == 4)
 		{
 			SpawnSnake(2040, 600-32, 0);
 			SpawnSnake(2080, 600-32, 0);
@@ -86,7 +91,7 @@ void RenderLevel(int level)
 
 			CurrentSection++;
 		}
-		if(CurrentSection == 4)
+		if(CurrentSection == 6)
 		{
 			BuildTile(3328);
 			BuildTile(3584);
@@ -94,7 +99,7 @@ void RenderLevel(int level)
 
 			CurrentSection++;
 		}
-		if(CurrentSection == 6)
+		if(CurrentSection == 8)
 		{
 			SpawnEye(4100, 450, 0);
 
@@ -107,7 +112,7 @@ void RenderLevel(int level)
 
 			CurrentSection++;
 		}
-		if(CurrentSection == 8)
+		if(CurrentSection == 10)
 		{	
 			BuildPlatform(5120, 400);
 			BuildPlatform(5248, 500);
@@ -122,7 +127,7 @@ void RenderLevel(int level)
 
 			CurrentSection++;
 		}
-		if(CurrentSection == 10)
+		if(CurrentSection == 12)
 		{
 			BuildTile(6144);
 			BuildTile(6400);
@@ -136,7 +141,7 @@ void RenderLevel(int level)
 
 			CurrentSection++;
 		}
-		if(CurrentSection == 12)
+		if(CurrentSection == 14)
 		{
 			BuildTile(7168);
 			BuildTile(7424);
@@ -176,13 +181,17 @@ void RenderLevel(int level)
 			BuildColumn(960, 600-128);
 			BuildColumn(960, 600-192);
 
+			CurrentSection++;
+		}
+		if(CurrentSection == 2)
+		{
 			BuildPlatform(1152, 350);
 			BuildPlatform(1664, 200);
 			BuildPlatform(1536, 600);
 
 			CurrentSection++;
 		}
-		if(CurrentSection == 2)
+		if(CurrentSection == 4)
 		{
 			BuildTile(2048);
 			BuildTile(2304);
@@ -205,7 +214,7 @@ void RenderLevel(int level)
 
 			CurrentSection++;
 		}
-		if(CurrentSection == 4)
+		if(CurrentSection == 6)
 		{
 			BuildTile(3200);
 			BuildSmallTile(3712);
@@ -226,7 +235,7 @@ void RenderLevel(int level)
 
 			CurrentSection++;
 		}
-		if(CurrentSection == 6)
+		if(CurrentSection == 8)
 		{
 			BuildTile(4096);
 			BuildTile(4352);
@@ -237,7 +246,7 @@ void RenderLevel(int level)
 
 			CurrentSection++;
 		}
-		if(CurrentSection == 8)
+		if(CurrentSection == 10)
 		{
 			BuildSmallTile(5312);
 			BuildSmallTile(5600);
@@ -255,7 +264,7 @@ void RenderLevel(int level)
 
 			CurrentSection++;
 		}
-		if(CurrentSection == 10)
+		if(CurrentSection == 12)
 		{
 			BuildTile(6144);
 			BuildTile(6400);
@@ -286,7 +295,7 @@ void RenderLevel(int level)
 
 			CurrentSection++;
 		}
-		if(CurrentSection == 12)
+		if(CurrentSection == 14)
 		{
 			BuildPlatform(7296, 600);
 			BuildPlatform(7680, 500);
@@ -323,6 +332,275 @@ void RenderLevel(int level)
 			CurrentSection++;
 		}
 	}
+
+	if(level == 3)
+	{
+		if(CurrentSection == 0)
+		{
+			BuildSmallTile(-64);
+			BuildTile(0);
+			BuildTile(256);
+			BuildTile(512);
+			BuildTile(768);
+			BuildColumn(512, 600-64);
+			BuildSpring(976, 600-48);
+			BuildWall(1024, 600-256);
+
+			SpawnFrog(650, 600-28, 0);
+
+			CurrentSection++;
+		}
+		if(CurrentSection == 2)
+		{
+			BuildTile(1024);
+			BuildTile(1280);
+			BuildTile(1536);
+			BuildTile(1792);
+			BuildPlatform(1024, 332);
+			BuildPlatform(1280, 332);
+			BuildPlatform(1280, 466);
+			BuildPlatform(1536, 466);
+			BuildWall(1792, 0);
+			BuildWall(1792, 222);
+
+			SpawnFrog(1500, 332-28, 0);
+			SpawnFrog(1300, 466-28, 1);
+			SpawnFrog(1792, 600-28, 0);
+			
+			CurrentSection++;
+		}
+		if(CurrentSection == 4)
+		{
+			BuildSmallTile(2048);
+			BuildSpring(2064, 600-48);
+			BuildCloudPlatform(2048, 350);
+			BuildCloudPlatform(2064, 250);
+			BuildCloudPlatform(2032, 150);
+			BuildCloudPlatform(2224, 150);
+			BuildCloudPlatform(2688, 350);
+
+			CurrentSection++;
+		}
+		if(CurrentSection == 6)
+		{
+			BuildCloudPlatform(3072, 550);
+			BuildCloudPlatform(3264, 550);
+			BuildCloudPlatform(3456, 550);
+			BuildCloudPlatform(3648, 550);
+			BuildCloudPlatform(3200, 450);
+			BuildCloudPlatform(3700, 450);
+			BuildWall(3968, 600-256);
+			BuildTile(3968);
+			
+			SpawnCloud();
+
+			CurrentSection++;
+		}
+		if(CurrentSection == 8)
+		{
+			BuildTile(4096);
+			BuildTile(4352);
+			BuildSpring(4530, 600-48);
+			BuildWall(4578, 408);
+			BuildPlatform(4608, 408);
+			BuildSpring(4816, 408-48);
+			BuildWall(4864, 164);
+			BuildPlatform(4894, 164);
+			BuildSnakePot(4992, 100, 0, 60);
+			
+			CurrentSection++;
+		}
+		if(CurrentSection == 10)
+		{
+			BuildCloudPlatform(5150, 200);
+			BuildCloudPlatform(5408, 400);
+			BuildTile(5632);
+			BuildTile(5888);
+			BuildWall(5888, 0);
+			BuildWall(5888, 206);
+			BuildPlatform(5888, 450);
+			BuildSpring(5888, 600-48);
+			BuildSpring(5936, 600-48);
+			BuildSpring(5984, 600-48);
+			BuildSpring(6032, 600-48);
+			BuildSpring(6080, 600-48);
+			BuildSpring(6128, 600-48);
+			BuildSpring(6176, 600-48);
+
+			SpawnCloud();
+			
+			CurrentSection++;
+		}
+		if(CurrentSection == 12)
+		{
+			BuildTile(6144);
+			BuildTile(6400);
+			BuildTile(6656);
+			BuildMovingPlatform(6272, 400, 6016, 400);
+			BuildMovingPlatform(6272, 350, 6784, 350);
+			BuildWall(6882, 600-256);
+			BuildPlatform(6912, 344);
+
+			SpawnEye(6272, 550, 0);
+			
+			CurrentSection++;
+		}
+		if(CurrentSection == 14)
+		{
+			BuildMovingPlatform(7168, 400, 7424, 400);
+			BuildMovingPlatform(7680, 500, 7424, 500);
+			BuildMovingPlatform(7680, 600, 7936, 600);
+			BuildTile(8064);
+			BuildTile(8192);
+			BuildTile(8448);
+
+			CurrentSection++;
+		}
+	}
+
+	if(level == 4)
+	{
+		if(CurrentSection == 0)
+		{
+			BuildSmallTile(-64);
+			BuildTile(0);
+			BuildTile(256);
+			BuildTile(512);
+			BuildTile(768);
+
+			SpawnPixie(640);
+			
+			CurrentSection++;
+		}
+		if(CurrentSection == 2)
+		{
+			BuildTile(1024);
+			BuildTile(1280);
+			BuildCloudPlatform(1344, 500);
+			BuildCloudPlatform(1536, 500);
+			BuildMovingPlatform(2304, 450, 1792, 450);
+
+			SpawnPixie(1408);
+			SpawnPixie(1664);
+			
+			CurrentSection++;
+		}
+		if(CurrentSection == 4)
+		{
+			BuildTile(2560);
+			BuildTile(2816);
+			BuildColumn(2752, 600-64);
+			BuildColumn(2752, 600-128);
+			BuildColumn(3008, 600-64);
+			BuildColumn(3008, 600-128);
+			BuildSpikeWall(2560, 3968, 3);
+
+			SpawnPixie(2304);
+
+			CurrentSection++;
+		}
+		if(CurrentSection == 6)
+		{
+			BuildSmallTile(3072);
+			BuildSmallTile(3328);
+			//BuildSpring(3080, 600-48);
+			BuildSpring(3336, 600-48);
+			BuildCloudPlatform(3328, 350);
+			BuildCloudPlatform(3200, 275);
+			BuildPlatform(3328, 200);
+			BuildPlatform(3584, 200);
+			BuildWall(3810, 212);
+			BuildWall(3810, 408);
+			BuildWall(4066, 0);
+			BuildWall(4066, 256);
+			BuildTile(3840);
+
+			SpawnCloud();
+
+			CurrentSection++;
+		}
+		if(CurrentSection == 8)
+		{
+			SpawnDrill(4608, 600);
+			
+			BuildTile(4096);
+			BuildTile(4352);
+			BuildTile(4608);
+			BuildTile(4864);
+			BuildColumn(4288, 600-64);
+			BuildColumn(4288, 600-128);
+			BuildColumn(4864, 600-64);
+			BuildColumn(4864, 600-128);
+
+			CurrentSection++;
+		}
+		if(CurrentSection == 10)
+		{
+			SpawnDrill(6016, 600);
+			
+			BuildSmallTile(5120);
+			BuildSmallTile(5248);
+			BuildSmallTile(5376);
+			BuildSmallTile(5504);
+			BuildSmallTile(5632);
+			BuildTile(5760);
+			BuildTile(6016);
+			BuildColumn(5888, 600-64);
+
+			BuildSpikes(5120, 600-32, 60, 0);
+			BuildSpikes(5248, 600-32, 60, 45);
+			BuildSpikes(5376, 600-32, 60, 0);
+			BuildSpikes(5504, 600-32, 60, 45);
+			BuildSpikes(5632, 600-32, 60, 0);
+			BuildSpikes(5760, 600-32, 60, 45);
+			
+			CurrentSection++;
+		}
+		if(CurrentSection == 12)
+		{
+			BuildTile(6400);
+			BuildTile(6656);
+			BuildTile(6912);
+			BuildColumn(7104, 600-64);
+			BuildColumn(7104, 600-128);
+			BuildSpikeWall(6656, 8192, 4);
+
+			SpawnBall(6528, 300);
+			
+			CurrentSection++;
+		}
+		if(CurrentSection == 14)
+		{
+			BuildSmallTile(7296);
+			BuildSmallTile(7360);
+			BuildColumn(7360, 600-64);
+			BuildColumn(7360, 600-128);
+			BuildColumn(7360, 600-192);
+			BuildColumn(7360, 600-256);
+			BuildSpring(7304, 600-48);
+			BuildSpring(7368, 600-304);
+			BuildCloudPlatform(7360, 150);
+			BuildPlatform(7552, 150);
+			
+			SpawnBall(7680, 50);
+			BuildMovingPlatform(7808, 200, 8000, 200);
+			BuildMovingPlatform(8128, 250, 7936, 250);
+			BuildMovingPlatform(8128, 300, 7808, 300);
+			BuildMovingPlatform(8064, 350, 7872, 350);
+			BuildMovingPlatform(7936, 400, 8128, 400);
+			BuildMovingPlatform(8000, 450, 7808, 450);
+			BuildMovingPlatform(7808, 500, 8128, 500);
+			BuildMovingPlatform(7872, 550, 8064, 550);
+			
+			BuildWall(8192, 0);
+			BuildWall(8192, 256);
+			BuildTile(8064);
+			BuildTile(8192);
+			BuildTile(8448);
+
+			CurrentSection++;
+		}
+	}
 }
 
 void UpdateLevel()
@@ -338,24 +616,25 @@ void UpdateLevel()
 	}
 	
 	/*Scroll Screen with Player*/
-	if(player->sx >= (screen->w * 0.6) + offset)offset += player->sx - ((screen->w * 0.6) + offset);					/*Right*/
-	if(player->sx <= (screen->w * 0.3) + offset && offset > onset)offset -= ((screen->w * 0.3) + offset) - player->sx;		/*Left*/
+	if(player->sx >= (screen->w * 0.5) + offset)offset += player->sx - ((screen->w * 0.5) + offset);						/*Right*/
+	if(player->sx <= (screen->w * 0.2) + offset && offset > onset)offset -= ((screen->w * 0.2) + offset) - player->sx;		/*Left*/
 	if(onset + 1024 < offset)onset = offset - 1024;
 
 	/*When the player reaches a certain point, load the next section*/
-	if(offset + screen->w >= 2028 && CurrentSection == 1)CurrentSection++;
-	if(offset + screen->w >= 3052 && CurrentSection == 3)CurrentSection++;
-	if(offset + screen->w >= 4076 && CurrentSection == 5)CurrentSection++;
-	if(offset + screen->w >= 5100 && CurrentSection == 7)CurrentSection++;
-	if(offset + screen->w >= 6124 && CurrentSection == 9)CurrentSection++;
-	if(offset + screen->w >= 7148 && CurrentSection == 11)CurrentSection++;
+	if(offset + screen->w >= 1024 && CurrentSection == 1)CurrentSection++;
+	if(offset + screen->w >= 2048 && CurrentSection == 3)CurrentSection++;
+	if(offset + screen->w >= 3072 && CurrentSection == 5)CurrentSection++;
+	if(offset + screen->w >= 4096 && CurrentSection == 7)CurrentSection++;
+	if(offset + screen->w >= 5120 && CurrentSection == 9)CurrentSection++;
+	if(offset + screen->w >= 6144 && CurrentSection == 11)CurrentSection++;
+	if(offset + screen->w >= 7168 && CurrentSection == 13)CurrentSection++;
 
 	if(player->sx >= 4096)		/*Sets checkpoint*/
 	{
 		cx = 4196;
 		cy = 550;
 		coff = 4096;
-		csec = 6;
+		csec = 8;
 	}
 
 	/*End of Level*/
@@ -392,7 +671,7 @@ void UpdateLevel()
 		return;
 	}
 	
-	if(CurrentLevel == 3)exit(1);	/*Win Condition*/
+	if(CurrentLevel == 5)exit(1);	/*Win Condition*/
 
 	RenderLevel(CurrentLevel);
 }

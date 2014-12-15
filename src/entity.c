@@ -149,7 +149,7 @@ void CheckCollisions(Entity *self, SDL_Rect box1, SDL_Rect *xCollision, SDL_Rect
 		{
 			if(EntityList[i].state == ST_TILE)		/*Collision with the world*/
 			{
-				if((abs((box1.y + box1.h) - box2.y) <= abs((box1.x + box1.w) - box2.x)) && (abs((box1.y + box1.h) - box2.y) <= abs((box2.x + box2.w) - box1.x)) && (1 * abs((box1.y + box1.h) - box2.y) <= abs((box2.y + box2.h) - box1.y)) && (self->vy - EntityList[i].vy) >= 0)
+				if((abs((box1.y + box1.h) - box2.y) <= abs((box1.x + box1.w) - box2.x)) && (abs((box1.y + box1.h) - box2.y) <= abs((box2.x + box2.w) - box1.x)) && (abs((box1.y + box1.h) - box2.y) <= abs((box2.y + box2.h) - box1.y)) && (self->vy - EntityList[i].vy) >= 0)
 				{
 					self->uCheck = 1;
 					*yCollision = box2;
@@ -220,14 +220,14 @@ void PlayerThink(Entity *self)
 	/*Check for Collisions*/
 	do
 	{
-		b1.x = self->sx + self->bbox.x + (self->vx * (i / 60));
+		b1.x = self->sx + self->bbox.x + (self->vx * (i / 10));
 		b1.y = self->sy + self->bbox.y + self->vy/1.5;
 		b1.w = self->bbox.w;
 		b1.h = self->bbox.h;
 		CheckCollisions(self, b1, &xCol, &yCol, &yMov);
 		i++;
 	}
-	while((i < 61) && (!self->lCheck && !self->rCheck));
+	while((i <= 10) /*&& (!self->lCheck && !self->rCheck)*/);
 
 	if(!self->isRight && self->state != ST_DYING)self->frame -= 8;	/*Direction Calculation*/
 
@@ -1047,7 +1047,7 @@ void PixieThink(Entity *self)
 	b2.h = Player->bbox.h;
 	CheckCollisions(self, b1, &xCol, &yCol, &empty);
 
-	if(self->health > 0)
+	if(self->health > 0 && Player->sx + 480 > self->sx)
 	{	
 		if(self->sy < self->busy && self->sy < Player->sy)
 		{
@@ -1123,7 +1123,7 @@ Entity *SpawnFrog(int x, int y, int i)
 	frog->frame = 0 + (3 * i);
 	frog->sx = x;
 	frog->sy = y;
-	frog->vx = 4;
+	frog->vx = 2;
 	frog->vy = -15;
 	frog->shown = 1;
 	frog->delay = 10;	/*pauses between jumps for this many frames*/
@@ -1157,11 +1157,11 @@ void FrogThink(Entity *self)
 		/*What to Do if Colliding*/
 		if(self->uCheck)
 		{
-			if(self->delay == 0)
+			if(self->delay == 0)		/*Jump*/
 			{
 				self->busy = 1;
 				self->delay = 10;
-				self->vy = -15;
+				self->vy = -12;
 			}
 			else 
 			{
@@ -1287,7 +1287,7 @@ void DrillThink(Entity *self)
 		if(self->uCheck)
 		{
 			if(self->sy > yCol.y - self->bbox.h)
-				self->vy = -1;
+				self->vy = -2;
 			else 
 			{
 				self->sy = yCol.y - self->bbox.h;

@@ -27,7 +27,7 @@ void Init_Graphics(int windowed)
 	Uint32 Vflags =	SDL_ANYFORMAT | SDL_SRCALPHA;		//SDL_FULLSCREEN | SDL_ANYFORMAT;
 	Uint32 HWflag = 0;
 	SDL_Surface *temp;
-	S_Data.xres = 1024;	//1280;
+	S_Data.xres = 960;
 	S_Data.yres = 720;
 	if(!windowed)Vflags |= SDL_FULLSCREEN;
 	#if SDL_BYTEORDER == SDL_BIG_ENDIAN
