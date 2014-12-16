@@ -17,6 +17,7 @@ Uint32 NOW;
 int NumSprites;
 float offset;	//left side of screen
 float onset;	//as far back left as you can scroll
+float quake;
 
 Uint32 rmask,gmask,bmask,amask;
 ScreenData S_Data;
@@ -49,23 +50,23 @@ void Init_Graphics(int windowed)
 	atexit(SDL_Quit);
 	if(SDL_VideoModeOK(1024, 720, 32, Vflags | SDL_HWSURFACE))		//SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
 	{
-		S_Data.xres = 1024;	//1280;
+		S_Data.xres = 960;	//1280;
 		S_Data.yres = 720;
 		S_Data.depth = 32;
 		//Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE;
 		HWflag = SDL_HWSURFACE;
 	}
-	else if(SDL_VideoModeOK(1024, 720, 16,	Vflags | SDL_HWSURFACE))	//SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
+	else if(SDL_VideoModeOK(960, 720, 16,	Vflags | SDL_HWSURFACE))	//SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
 		 {
-			 S_Data.xres = 1024;
+			 S_Data.xres = 960;
 			 S_Data.yres = 720;
 			 S_Data.depth = 16;
 			 //Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE;
 			 HWflag = SDL_HWSURFACE;
 		 }
-		 else if(SDL_VideoModeOK(1024, 720, 16,	Vflags))		//SDL_FULLSCREEN | SDL_ANYFORMAT))
+		 else if(SDL_VideoModeOK(960, 720, 16,	Vflags))		//SDL_FULLSCREEN | SDL_ANYFORMAT))
 			  {
-				  S_Data.xres = 1024;
+				  S_Data.xres = 960;
 				  S_Data.yres = 720;
 				  S_Data.depth = 16;
 				  //Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT;
@@ -85,7 +86,7 @@ void Init_Graphics(int windowed)
 	}
 	screen = SDL_DisplayFormat(temp);
 	SDL_FreeSurface(temp);
-	temp = SDL_CreateRGBSurface(HWflag/*Vflags*/, 2048, 720, S_Data.depth, rmask, gmask, bmask, amask);
+	temp = SDL_CreateRGBSurface(HWflag/*Vflags*/, 1920, 720, S_Data.depth, rmask, gmask, bmask, amask);
 	if(temp == NULL)
 	{
 		fprintf(stderr, "Couldn't initialise background buffer: %s\n", SDL_GetError());
@@ -273,7 +274,7 @@ void DrawSprite(Sprite *sprite, SDL_Surface *surface, float sx, float sy, int fr
     src.w = sprite->w;
     src.h = sprite->h;
 	dest.x = sx - offset;
-    dest.y = sy;
+    dest.y = sy - quake;
     dest.w = sprite->w;
     dest.h = sprite->h;
     SDL_BlitSurface(sprite->surface, &src, surface, &dest);

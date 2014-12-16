@@ -4,8 +4,10 @@
 enum Button_States {B_Normal,B_Press,B_Highlight};
 
 extern Entity *Player;
+extern Entity *Boss;
 extern SDL_Surface *screen;
 extern int lives;
+extern int CurrentLevel;
 int keymoved = 0;
 
 
@@ -29,12 +31,20 @@ void DrawHUD()
 	{
 		int i;
 		
+		/*Player stuff*/
 		DrawStatusBarHoriz(Player->health, Player->healthmax, Green, Red, 10, 10, 160, 13);
 		DrawText("Health", screen, 11, 9, IndexColor(White), F_Small);
 		DrawText("Lives:", screen, 200, 9, IndexColor(White), F_Small);
 		for(i=0; i<lives; i++)
 		{
 			DrawText("*", screen, 250 + (7 * i), 9, IndexColor(White), F_Small);
+		}
+
+		/*Boss stuff*/
+		if(CurrentLevel == 6)
+		{
+			DrawStatusBarHoriz(Boss->health, Boss->healthmax, DarkGreen, DarkRed, 790, 10, 160, 13);
+			DrawText("Boss Health", screen, 791, 9, IndexColor(White), F_Small);
 		}
   }
 }

@@ -8,9 +8,11 @@ extern SDL_Surface *screen;
 extern SDL_Rect Camera;
 extern float offset;
 extern float onset;
+extern float quake;
 
 Entity EntityList[MAXENTITIES];
 Entity *Player;
+Entity *Boss;
 int gravity = 13;
 int NumLives = 3;
 int NumEnts;
@@ -746,6 +748,48 @@ void SnakeThink(Entity *self)
 	}
 
 	if(self->sx + self->bbox.w < onset || self->sy > 800)FreeEntity(self);		/*When offscreen, free self*/
+}
+
+Entity *BuildSnakePot(int x, int y, int i, int j)
+{
+	Entity *pot;
+	pot = NewEntity();
+	if(pot == NULL)return pot;
+	pot->sprite = LoadSprite("images/snakepot.png", 32, 64);
+	pot->isRight = i;
+	pot->frame = 8 * i;
+	pot->shown = 1;
+	pot->sx = x;
+	pot->sy = y;
+	pot->bbox.x = 0;
+	pot->bbox.y = 32;
+	pot->bbox.w = 32;
+	pot->bbox.h = 32;
+	pot->delay = 0;
+	pot->busy = j;				/*Each pot can have its own spawn rate*/
+	pot->state = ST_TILE;
+	pot->think = PotThink;
+	pot->owner = NULL;
+	return pot;
+}
+
+void PotThink(Entity *self)
+{
+	if(self->delay <= 0)
+	{
+		self->delay = 2;
+		if(self->frame < 7 + (8 * self->isRight))
+		{
+			self->frame++;
+		}
+		else
+		{
+			self->frame = 0 + (8 * self->isRight);
+			SpawnSnake(self->sx + 6, self->sy, self->isRight);
+			self->delay = self->busy;
+		}
+	}
+	else self->delay--;
 }
 
 Entity *SpawnEye(int x, int y, int wave)
@@ -1635,46 +1679,81 @@ void LaserThink(Entity *self)
 	if(self->sx < onset)FreeEntity(self);
 }
 
-Entity *BuildSnakePot(int x, int y, int i, int j)
+Entity *SpawnBoss()
 {
-	Entity *pot;
-	pot = NewEntity();
-	if(pot == NULL)return pot;
-	pot->sprite = LoadSprite("images/snakepot.png", 32, 64);
-	pot->isRight = i;
-	pot->frame = 8 * i;
-	pot->shown = 1;
-	pot->sx = x;
-	pot->sy = y;
-	pot->bbox.x = 0;
-	pot->bbox.y = 32;
-	pot->bbox.w = 32;
-	pot->bbox.h = 32;
-	pot->delay = 0;
-	pot->busy = j;				/*Each pot can have its own spawn rate*/
-	pot->state = ST_TILE;
-	pot->think = PotThink;
-	pot->owner = NULL;
-	return pot;
+	Entity *boss;
+	boss = NewEntity();
+	if(boss == NULL)return boss;
+	boss->sprite = LoadSprite("images/bossbody.png", 72, 94);
+	boss->shown = 1;
+	boss->frame = 0;
+	boss->bbox.x = 26;
+	boss->bbox.y = 4;
+	boss->bbox.w = 46;
+	boss->bbox.h = 92;
+	boss->sx = 792;
+	boss->sy = 506;
+	boss->health = 5;
+	boss->healthmax = 5;
+	boss->state = ST_TILE;
+	boss->think = BossThink;
+	boss->owner = NULL;
+	Boss = boss;
+
+	Entity *head1;
+	head1 = NewEntity();
+	if(head1 == NULL)return head1;
+	head1->sprite = LoadSprite("images/bosshead.png", 34, 32);
+	head1->shown = 1;
+	head1->frame = 0;
+	head1->bbox.x = 2;
+	head1->bbox.y = 0;
+	head1->bbox.w = 32;
+	head1->bbox.h = 32;
+	head1->sx = boss->sx;
+	head1->sy = boss->sy;
+	head1->state = ST_ENEMY;
+	head1->think = BossHeadThink1;
+	head1->owner = boss;
+
+	return boss;
 }
 
-void PotThink(Entity *self)
+void BossThink(Entity *self)
 {
-	if(self->delay <= 0)
+	if(self->health > 0)
 	{
-		self->delay = 2;
-		if(self->frame < 7 + (8 * self->isRight))
+		if(self->invuln > 0)	/*When hit*/
 		{
-			self->frame++;
+			if(self->invuln >= 60)self->frame = 1;			/*Tail slam*/
+			else self->frame = 0;
+			
+			if(self->invuln >= 50 && self->invuln < 60)	/*Player sent back*/
+			{
+				Player->vx = -35;
+				Player->vy = -5;
+			}
+
+			if(self->invuln < 60)							/*Screen shake*/
+			{
+				if(quake < 1)quake = self->invuln / 10;
+				else quake = -self->invuln / 10;
+			}
+			
+			self->invuln--;
 		}
 		else
 		{
-			self->frame = 0 + (8 * self->isRight);
-			SpawnSnake(self->sx + 6, self->sy, self->isRight);
-			self->delay = self->busy;
+			quake = 0;										/*Stop screen*/
 		}
+
+		if(Player->sx > 700 && self->invuln == 0)self->invuln = 63;		//nothing
 	}
-	else self->delay--;
+}
+
+void BossHeadThink1(Entity *self)
+{
+
 }
 
 Entity *BuildTile(int x)
@@ -1959,7 +2038,7 @@ void WallThink(Entity *self)
 		self->sx += self->vx;
 	}
 
-	if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0)	/*Check for Player Collision*/
+	if(Collide(b1,b2))	/*Check for Player Collision*/
 	{
 		Player->health -= 5;
 		Player->vy = -15;
@@ -1980,7 +2059,7 @@ Entity *BuildSpikes(int x, int y, int i, int j)
 	spike->bbox.x = 3;
 	spike->bbox.y = 32;
 	spike->bbox.w = 58;
-	spike->bbox.h = 10;
+	spike->bbox.h = 32;
 	spike->busy = i;			//Time between intervals
 	spike->delay = i + j;		//Offset
 	spike->isRight = 1;
@@ -2024,7 +2103,7 @@ void SpikeThink(Entity *self)
 				self->frame++;
 				self->delay = 2;
 				self->bbox.y = 16;
-				self->bbox.h = 26;
+				//self->bbox.h = 96;
 				self->isRight = 1;
 			}
 			break;
@@ -2037,14 +2116,14 @@ void SpikeThink(Entity *self)
 					self->frame++;
 					self->delay = 10;
 					self->bbox.y = 0;
-					self->bbox.h = 42;
+					//self->bbox.h = 96;
 				}
 				else
 				{
 					self->frame = 0;
 					self->delay = self->busy;
 					self->bbox.y = 32;
-					self->bbox.h = 10;
+					//self->bbox.h = 64;
 				}
 			}
 			break;
@@ -2055,7 +2134,7 @@ void SpikeThink(Entity *self)
 				self->frame--;
 				self->delay = 3;
 				self->bbox.y = 16;
-				self->bbox.h = 26;
+				//self->bbox.h = 80;
 				self->isRight = 0;
 			}
 			break;

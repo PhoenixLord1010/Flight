@@ -52,6 +52,8 @@ Entity *MakeSpear();								/*Spear*/
 void SpearThink(Entity *self);
 Entity *SpawnSnake(int x, int y, int i);			/*Snake enemy*/
 void SnakeThink(Entity *self);
+Entity *BuildSnakePot(int x, int y, int i, int j);	/*Snake spawn point*/
+void PotThink(Entity *self);
 Entity *SpawnEye(int x, int y, int wave);			/*Eye enemy*/
 void EyeThink(Entity *self);
 Entity *SpawnCloud();								/*Cloud enemy*/
@@ -68,8 +70,10 @@ Entity *SpawnBall(int x, int y);					/*Ball enemy*/
 void BallThink(Entity *self);
 Entity *ShootLaser(int x, int y);					/*Ball's laser attack*/
 void LaserThink(Entity *self);
-Entity *BuildSnakePot(int x, int y, int i, int j);	/*Snake spawn point*/
-void PotThink(Entity *self);
+Entity *SpawnBoss();								/*Boss's body*/
+void BossThink(Entity *self);
+void BossHeadThink1(Entity *self);
+void BossHeadThink2(Entity *self);
 Entity *BuildTile(int x);							/*Ground*/
 Entity *BuildSmallTile(int x);						/*Also ground*/
 Entity *BuildPlatform(int x, int y);				/*Platforms*/
