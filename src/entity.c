@@ -1693,9 +1693,10 @@ Entity *SpawnBoss()
 	boss->bbox.h = 92;
 	boss->sx = 792;
 	boss->sy = 506;
+	boss->isRight = 5;
 	boss->health = 5;
 	boss->healthmax = 5;
-	boss->state = ST_TILE;
+	boss->state = ST_ENEMY;
 	boss->think = BossThink;
 	boss->owner = NULL;
 	Boss = boss;
@@ -1712,26 +1713,67 @@ Entity *SpawnBoss()
 	head1->bbox.h = 32;
 	head1->sx = boss->sx;
 	head1->sy = boss->sy;
+	head1->vx = 0.25;
+	head1->isRight = 0;
+	head1->busy = 0;
+	head1->ct = 40;
+	head1->health = boss->sx - 8;
+	head1->healthmax = boss->sx + 8;
 	head1->state = ST_ENEMY;
 	head1->think = BossHeadThink1;
 	head1->owner = boss;
+
+	Entity *head2;
+	head2 = NewEntity();
+	if(head2 == NULL)return head2;
+	head2->sprite = LoadSprite("images/bosshead.png", 34, 32);
+	head2->shown = 1;
+	head2->frame = 0;
+	head2->bbox.x = 2;
+	head2->bbox.y = 0;
+	head2->bbox.w = 32;
+	head2->bbox.h = 32;
+	head2->sx = boss->sx;
+	head2->sy = boss->sy + 32;
+	head2->vx = 0.1875;
+	head2->isRight = 0;
+	head2->busy = 0;
+	head2->ct = 20;
+	head2->health = boss->sx - 6;
+	head2->healthmax = boss->sx + 6;
+	head2->state = ST_ENEMY;
+	head2->think = BossHeadThink2;
+	head2->owner = boss;
 
 	return boss;
 }
 
 void BossThink(Entity *self)
 {
-	if(self->health > 0)
+	SDL_Rect b1, b2, xCol, yCol;
+	
+	/*Check for Collisions*/
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+	CheckCollisions(self, b1, &xCol, &yCol, &empty);
+	
+	if(self->health > 0)	/*While Alive*/
 	{
 		if(self->invuln > 0)	/*When hit*/
 		{
 			if(self->invuln >= 60)self->frame = 1;			/*Tail slam*/
 			else self->frame = 0;
 			
-			if(self->invuln >= 50 && self->invuln < 60)	/*Player sent back*/
+			if(self->invuln >= 50 && self->invuln < 60)		/*Player sent back*/
 			{
 				Player->vx = -35;
-				Player->vy = -5;
+				Player->vy = -10;
 			}
 
 			if(self->invuln < 60)							/*Screen shake*/
@@ -1747,13 +1789,440 @@ void BossThink(Entity *self)
 			quake = 0;										/*Stop screen*/
 		}
 
-		if(Player->sx > 700 && self->invuln == 0)self->invuln = 63;		//nothing
+		if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0)		/*Check for Player Collision*/
+		{
+			Player->health -= 1;
+			Player->vy = -15;
+			Player->vx = -15;
+			Player->invuln = 30;
+		}
+	}
+	else
+	{
+		if(self->state != ST_DEAD)		/*Dying*/
+		{
+			self->vy = -15;
+			self->state = ST_DEAD;
+			self->frame = 2;
+		}
+	}
+
+	if(self->state == ST_DEAD)			/*Dead*/
+	{
+		self->vy += 1;
+		self->sy += self->vy;
+		if(self->sy >= 800)FreeEntity(self);
 	}
 }
 
 void BossHeadThink1(Entity *self)
 {
+	SDL_Rect b1, b2, xCol, yCol;
 
+	self->invuln = 0;
+
+	/*Check for Collisions*/
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+	CheckCollisions(self, b1, &xCol, &yCol, &empty);
+
+	if(Boss->health > 0)	/*While Alive*/
+	{
+		if(!self->busy)
+		{
+			if(self->delay > 0)		/*Head Movement*/
+			{
+				if(self->isRight && self->sx < self->healthmax)
+				{
+					self->sx += self->vx;			
+				}	
+				else if(self->sx > self->health) self->sx -= self->vx;
+
+				self->delay--;
+			}
+			else
+			{
+				self->delay = rand() % 32;
+				if(self->isRight)self->isRight = 0;
+				else self->isRight = 1;
+			}
+
+			if(self->ct >= 0)self->ct--;		/*Countdown to Attack*/
+			else
+			{
+				self->busy = -1;
+				self->ct = -6 * (6 - Boss->health);
+			}
+		}
+
+		if(self->invuln && self->busy <= 0 && Boss->invuln == 0)		/*Hit*/
+		{
+			Boss->health--;
+			Boss->invuln = 63;
+			self->busy = 60;
+			self->frame = 2;
+			self->invuln = 0;
+		}
+
+		if(self->busy > 0)		/*Post-hit Invincibility*/
+		{
+			if(self->busy < 10)self->frame = 0;
+			self->ct = 0;
+			self->busy--;
+		}
+
+		if(self->busy < 0)		/*Attack*/
+		{
+			if(self->ct < 0)
+			{
+				self->frame = 1;
+				if(self->ct % 10 == -1)FireBall(self->sx - 12, self->sy + 12);
+				if(self->ct == -1)self->ct = 30;
+
+				self->ct++;
+			}
+			if(self->ct > 0)self->ct--;
+			else if(self->ct == 0)
+				{
+					self->frame = 0;
+					self->busy = 0;
+					self->ct = 30 + (Boss->health * 10);
+				}
+		}
+		
+		if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0)		/*Check for Player Collision*/
+		{
+			Player->health -= 1;
+			Player->vy = -15;
+			Player->vx = -15;
+			Player->invuln = 30;
+		}
+	}
+	else FreeEntity(self);	/*Dead*/
+}
+
+void BossHeadThink2(Entity *self)
+{
+	SDL_Rect b1, b2, xCol, yCol;
+
+	self->invuln = 0;
+
+	/*Check for Collisions*/
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+	CheckCollisions(self, b1, &xCol, &yCol, &empty);
+
+	if(Boss->health > 0)	/*While Alive*/
+	{
+		if(!self->busy)
+		{
+			if(self->delay > 0)		/*Head Movement*/
+			{
+				if(self->isRight && self->sx < self->healthmax)
+				{
+					self->sx += self->vx;			
+				}	
+				else if(self->sx > self->health) self->sx -= self->vx;
+
+				self->delay--;
+			}
+			else
+			{
+				self->delay = rand() % 24;
+				if(self->isRight)self->isRight = 0;
+				else self->isRight = 1;
+			}
+
+			if(self->ct >= 0)self->ct--;		/*Countdown to Attack*/
+			else
+			{
+				self->busy = -1;
+				self->ct = -1;
+			}
+		}
+
+		if(self->invuln && self->busy <= 0 && Boss->invuln == 0)		/*Hit*/
+		{
+			Boss->health--;
+			Boss->invuln = 63;
+			self->busy = 60;
+			self->frame = 2;
+			self->invuln = 0;
+		}
+
+		if(self->busy > 0)		/*Post-hit Invincibility*/
+		{
+			if(self->busy < 10)self->frame = 0;
+			self->invuln = 0;
+			self->ct = 0;
+			self->busy--;
+		}
+
+		if(self->busy < 0)		/*Attack*/
+		{
+			if(self->ct < 0)
+			{
+				self->frame = 1;
+				FireWall(self->sx - 11, self->sy - 34, 0);
+				self->ct = 30;
+			}
+			if(self->ct > 0)self->ct--;
+			else if(self->ct == 0)
+				{
+					self->frame = 0;
+					self->busy = 0;
+					if(Boss->health >= 3)self->ct = 60;
+					else self->ct = 50;
+				}
+		}
+		
+		if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0)		/*Check for Player Collision*/
+		{
+			Player->health -= 1;
+			Player->vy = -15;
+			Player->vx = -15;
+			Player->invuln = 30;
+		}
+	}
+	else FreeEntity(self);	/*Dead*/
+}
+
+Entity *FireBall(int x, int y)
+{
+	Entity *fire;
+	fire = NewEntity();
+	if(fire == NULL)return fire;
+	fire->sprite = LoadSprite("images/fireball.png", 32, 32);
+	fire->bbox.x = 4;
+	fire->bbox.y = 4;
+	fire->bbox.w = 24;
+	fire->bbox.h = 24;
+	fire->frame = 0;
+	fire->sx = x;
+	fire->sy = y;
+	fire->shown = 1;
+	fire->ct = 0;
+	fire->delay = 0;
+	fire->state = ST_ENEMY;
+	fire->think = FireBallThink;
+	fire->owner = NULL;
+	return fire;
+}
+
+void FireBallThink(Entity *self)
+{
+	SDL_Rect b1, b2, xCol, yCol;
+	float px, py, pz, hyp;
+	float speed = 7;
+	
+	/*Check for Collisions*/
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+	CheckCollisions(self, b1, &xCol, &yCol, &empty); 
+
+	if(self->ct == 0)
+	{
+		px = Player->sx - self->sx;
+		py = Player->sy - self->sy;
+		pz = sqrt((px * px) + (py * py));
+		if(pz != 0)hyp = speed / pz;
+		else hyp = 0;
+		self->vx = px * hyp;
+		self->vy = py * hyp;
+
+		self->ct++;
+	}
+	
+	if(self->state == ST_ENEMY)
+	{
+		self->sx += self->vx;
+		self->sy += self->vy;
+	}
+
+	if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0 && self->state == ST_ENEMY)	/*Check for Player Collision*/
+	{
+		Player->health -= 1;
+		Player->vy = -15;
+		if((Player->sx + Player->bbox.x + (Player->bbox.w / 2)) < (self->sx + self->bbox.x + (self->bbox.w / 2)))
+			Player->vx = -15;
+		else Player->vx = 15;
+		Player->invuln = 30;
+	}
+
+	if(self->uCheck || Boss->invuln > 50)self->state = ST_DYING;	/*Disappear During Quake*/
+
+	if(self->state == ST_DYING)
+	{
+		if(self->delay > 0)self->delay--;
+		else
+		{
+			if(self->frame < 5)self->frame++;
+			else FreeEntity(self);
+
+			self->delay = 4;
+		}
+	}
+
+	if(self->sx < onset)FreeEntity(self);
+}
+
+Entity *FireWall(int x, int y, int i)
+{
+	Entity *fire;
+	fire = NewEntity();
+	if(fire == NULL)return fire;
+	fire->sprite = LoadSprite("images/firewall.png", 32, 64);
+	fire->bbox.x = 11;
+	fire->bbox.y = 53;
+	fire->bbox.w = 13;
+	fire->bbox.h = 11;
+	fire->frame = i;
+	fire->sx = x;
+	fire->sy = y;
+	fire->vx = -2;
+	fire->vy = 2;
+	fire->shown = 1;
+	fire->ct = 0;
+	fire->delay = 0;
+	fire->isRight = 1;
+	fire->state = ST_ENEMY;
+	fire->think = FireWallThink;
+	fire->owner = NULL;
+	return fire;
+}
+
+void FireWallThink(Entity *self)
+{
+	SDL_Rect b1, b2, xCol, yCol;
+	
+	/*Check for Collisions*/
+	b1.x = self->sx + self->bbox.x;
+	b1.y = self->sy + self->bbox.y;
+	b1.w = self->bbox.w;
+	b1.h = self->bbox.h;
+	b2.x = Player->sx + Player->bbox.x;
+	b2.y = Player->sy + Player->bbox.y;
+	b2.w = Player->bbox.w;
+	b2.h = Player->bbox.h;
+	CheckCollisions(self, b1, &xCol, &yCol, &empty); 
+	
+	if(self->frame == 0)
+	{
+		self->sx += self->vx;
+		self->sy += self->vy;
+	}
+
+	if(Collide(b1,b2) && Player->invuln == 0 && Player->health > 0 && self->state == ST_ENEMY)	/*Check for Player Collision*/
+	{
+		Player->health -= 1;
+		Player->vy = -15;
+		if((Player->sx + Player->bbox.x + (Player->bbox.w / 2)) < (self->sx + self->bbox.x + (self->bbox.w / 2)))
+			Player->vx = -15;
+		else Player->vx = 15;
+		Player->invuln = 30;
+	}
+
+	if(self->uCheck && self->state != ST_DYING)	/*Hit Ground*/
+	{
+		if(self->delay > 0)self->delay--;
+		else
+		{
+			if(self->isRight)
+			{
+				switch(self->frame)		/*Rise*/
+				{
+					case 0:
+						self->frame++;
+						self->bbox.x = 1;
+						self->bbox.y = 52;
+						self->bbox.w = 30;
+						self->bbox.h = 12;
+						self->sy = yCol.y - 64;
+						break;
+					case 1:
+						self->frame++;
+						self->bbox.y = 36;
+						self->bbox.h = 28;
+						break;
+					case 2:
+						self->frame++;
+						self->bbox.y = 20;
+						self->bbox.h = 44;
+						
+						break;
+					case 3:
+						self->frame++;
+						self->bbox.y = 4;
+						self->bbox.h = 60;
+						if(self->sx > 128)FireWall(self->sx - 32, self->sy, 1);
+						break;
+					case 4:
+						self->isRight = 0;
+						break;
+				}
+			}
+			else						/*Fall*/
+			{
+				switch(self->frame)
+				{
+					case 4:
+						self->frame--;
+						self->bbox.y = 20;
+						self->bbox.h = 44;
+						break;
+					case 3:
+						self->frame--;
+						self->bbox.y = 36;
+						self->bbox.h = 28;
+						break;
+					case 2:
+						self->frame--;
+						self->bbox.y = 52;
+						self->bbox.h = 12;
+						break;
+					case 1:
+						FreeEntity(self);
+						break;
+				}
+			}
+
+			if(Boss->health > 3)self->delay = 3;
+			else self->delay = 2;
+		}
+	}
+		
+	if(Boss->invuln > 50)self->state = ST_DYING;	/*Disappear During Quake*/
+
+	if(self->state == ST_DYING)
+	{
+		if(self->delay > 0)self->delay--;
+		else
+		{
+			if(self->frame == 0)self->frame++;
+			if(self->frame < 9)self->frame += 4;
+			else FreeEntity(self);
+
+			self->delay = 5;
+		}
+	}
 }
 
 Entity *BuildTile(int x)

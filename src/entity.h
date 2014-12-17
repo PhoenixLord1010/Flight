@@ -29,6 +29,7 @@ typedef struct ENTITY_T
 	int isRight;				/*Which way is this facing*/
 	int busy;					/*Attack delay*/
 	int delay;					/*Animation delay*/
+	int ct;						/*Misc Counter*/
 	
 	int health;					/*Current health*/
 	int healthmax;				/*Max health*/
@@ -70,10 +71,14 @@ Entity *SpawnBall(int x, int y);					/*Ball enemy*/
 void BallThink(Entity *self);
 Entity *ShootLaser(int x, int y);					/*Ball's laser attack*/
 void LaserThink(Entity *self);
-Entity *SpawnBoss();								/*Boss's body*/
+Entity *SpawnBoss();								/*Boss enemy*/
 void BossThink(Entity *self);
 void BossHeadThink1(Entity *self);
 void BossHeadThink2(Entity *self);
+Entity *FireBall(int x, int y);						/*Boss's Fireball attack*/
+void FireBallThink(Entity *self);
+Entity *FireWall(int x, int y, int i);				/*Boss's Firewall attack*/
+void FireWallThink(Entity *self);
 Entity *BuildTile(int x);							/*Ground*/
 Entity *BuildSmallTile(int x);						/*Also ground*/
 Entity *BuildPlatform(int x, int y);				/*Platforms*/
