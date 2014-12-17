@@ -6,15 +6,18 @@ Functions and stuff for handling entities
 */
 
 #include "graphics.h"
+#include "audio.h"
 
 #define MAXENTITIES		255
 #define MAXSTATES		20
+#define SOUNDSPERENT	4
 
 enum STATES {ST_IDLE,ST_WALK,ST_JUMP1,ST_JUMP2,ST_DASH,ST_DEAD,ST_DYING,ST_SPEAR,ST_ENEMY,ST_TILE};
 
 typedef struct ENTITY_T
 {
 	Sprite *sprite;				/*The sprite to be drawn*/
+	Sound *sound[SOUNDSPERENT];	/*Sound effects*/
 	struct ENTITY_T *owner;		/*For stuff spawned by entities*/
 	void (*think) (struct ENTITY_T *self);	/*Called by engine to handle inputs*/
 	int used;					/*Is this entity free*/

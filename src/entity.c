@@ -1,5 +1,4 @@
 #include <stdlib.h>
-
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include "entity.h"
@@ -28,13 +27,17 @@ Uint8 *keys;    /*current frame's key presses*/
 
 void InitEntityList()
 {
-	int i;
+	int i, j;
 	NumEnts = 0;
 	for(i = 0; i < MAXENTITIES; i++)
 	{
 		EntityList[i].used = 0;
 		EntityList[i].think = NULL;
 		if(EntityList[i].sprite != NULL)FreeSprite(EntityList[i].sprite);
+		for(j = 0;j < SOUNDSPERENT;j++)
+		{
+			EntityList[i].sound[j] = NULL;
+		}
 		EntityList[i].sprite = NULL;
 		EntityList[i].owner = NULL;
 	}
@@ -85,9 +88,15 @@ Entity *NewEntity()
 
 void FreeEntity(Entity *ent)
 {
+	int j;
 	NumEnts--;
 	ent->used = 0;
 	if(ent->sprite != NULL)FreeSprite(ent->sprite);
+	for(j = 0;j < SOUNDSPERENT;j++)
+	{
+		if(ent->sound[j] != NULL)FreeSound(ent->sound[j]);
+		ent->sound[j] = NULL;
+	}
 	memset(ent, 0, sizeof(Entity));
 }
 
@@ -186,6 +195,8 @@ Entity *MakePlayer(int x, int y)
 	player = NewEntity();
 	if(player == NULL)return player;
 	player->sprite = LoadSprite("images/player.png",34,48);
+	player->sound[0] = LoadSound("sounds/player_death.wav", MIX_MAX_VOLUME/2);
+	player->sound[1] = LoadSound("sounds/player_jump.wav", MIX_MAX_VOLUME/2);
 	player->bbox.x = 6;
 	player->bbox.y = 0;
 	player->bbox.w = 22;
@@ -333,6 +344,7 @@ void PlayerThink(Entity *self)
 					self->state = ST_JUMP1;
 					self->frame = 4;
 				}
+				Mix_PlayChannel(-1,self->sound[1]->sound,0);
 				self->uCheck = 0;
 			}
 		
@@ -396,6 +408,7 @@ void PlayerThink(Entity *self)
 		self->state = ST_DYING;
 		self->frame = 16;
 		self->delay = 15;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 	
 	if(self->sy >= 800)		/*How you actually die*/
@@ -494,6 +507,7 @@ Entity *MakeSpear()
 	spear = NewEntity();
 	if(spear == NULL)return spear;
 	spear->sprite = LoadSprite("images/spear.png",80,88);
+	spear->sound[0] = LoadSound("sounds/spear.wav", MIX_MAX_VOLUME/2);
 	spear->bbox.x = 68;
 	spear->bbox.y = 38;
 	spear->bbox.w = 12;
@@ -527,6 +541,7 @@ void SpearThink(Entity *self)
 		self->state = ST_SPEAR;
 		Player->isRight = 1;
 		self->busy = 15;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 	if(isKeyPressed(SDLK_KP9) && self->busy <= 0)	/*Up-Right*/
 	{
@@ -537,6 +552,7 @@ void SpearThink(Entity *self)
 		self->state = ST_SPEAR;
 		Player->isRight = 1;
 		self->busy = 15;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 	if(isKeyPressed(SDLK_KP3) && self->busy <= 0)	/*Down-Right*/
 	{
@@ -547,6 +563,7 @@ void SpearThink(Entity *self)
 		self->state = ST_SPEAR;
 		Player->isRight = 1;
 		self->busy = 15;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 	if(isKeyPressed(SDLK_KP4) && self->busy <= 0)	/*Left*/
 	{
@@ -557,6 +574,7 @@ void SpearThink(Entity *self)
 		self->state = ST_SPEAR;
 		Player->isRight = 0;
 		self->busy = 15;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 	if(isKeyPressed(SDLK_KP7) && self->busy <= 0)	/*Up-Left*/
 	{
@@ -567,6 +585,7 @@ void SpearThink(Entity *self)
 		self->state = ST_SPEAR;
 		Player->isRight = 0;
 		self->busy = 15;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 	if(isKeyPressed(SDLK_KP1) && self->busy <= 0)	/*Down-Left*/
 	{
@@ -577,6 +596,7 @@ void SpearThink(Entity *self)
 		self->state = ST_SPEAR;
 		Player->isRight = 0;
 		self->busy = 15;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 	if(isKeyPressed(SDLK_KP8) && self->busy <= 0)	/*Up*/
 	{
@@ -586,6 +606,7 @@ void SpearThink(Entity *self)
 		self->shown = 1;
 		self->state = ST_SPEAR;
 		self->busy = 15;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 	if(isKeyPressed(SDLK_KP2) && self->busy <= 0)	/*Down*/
 	{
@@ -595,6 +616,7 @@ void SpearThink(Entity *self)
 		self->shown = 1;
 		self->state = ST_SPEAR;
 		self->busy = 15;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 
 	if((isKeyPressed(SDLK_KP_PLUS) || isKeyPressed(SDLK_KP_ENTER)) && self->busy <= 0 && Player->uCheck == 1)	/*Dash*/
@@ -633,6 +655,7 @@ Entity *SpawnSnake(int x, int y, int i)
 	snake = NewEntity();
 	if(snake == NULL)return snake;
 	snake->sprite = LoadSprite("images/snake.png",20,32);
+	snake->sound[0] = LoadSound("sounds/snake_death.wav", MIX_MAX_VOLUME/2);
 	snake->bbox.x = 2;
 	snake->bbox.y = 0;
 	snake->bbox.w = 16;
@@ -723,6 +746,7 @@ void SnakeThink(Entity *self)
 		self->vy = -20;
 		self->state = ST_DEAD;
 		self->frame = 2 + (3 * self->isRight);
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 
 	switch(self->state)		/*Animations*/
@@ -798,6 +822,7 @@ Entity *SpawnEye(int x, int y, int wave)
 	eye = NewEntity();
 	if(eye == NULL)return eye;
 	eye->sprite = LoadSprite("images/eye.png",32,32);
+	eye->sound[0] = LoadSound("sounds/eye_death.wav", MIX_MAX_VOLUME/2);
 	eye->bbox.x = 0;
 	eye->bbox.y = 0;
 	eye->bbox.w = 32;
@@ -860,6 +885,7 @@ void EyeThink(Entity *self)
 		self->vy = -20;
 		self->state = ST_DEAD;
 		self->frame = 1;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 
 	if(self->delay > 0)self->delay--;
@@ -885,6 +911,8 @@ Entity *SpawnCloud()
 	cloud = NewEntity();
 	if(cloud == NULL)return cloud;
 	cloud->sprite = LoadSprite("images/cloud.png",32,32);
+	cloud->sound[0] = LoadSound("sounds/cloud_death.wav", MIX_MAX_VOLUME/2);
+	cloud->sound[1] = LoadSound("sounds/cloud_jolt.wav", MIX_MAX_VOLUME/2);
 	cloud->bbox.x = 0;
 	cloud->bbox.y = 0;
 	cloud->bbox.w = 32;
@@ -945,6 +973,7 @@ void CloudThink(Entity *self)
 		self->vy = -20;
 		self->state = ST_DEAD;
 		self->frame = 6;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 
 	switch(self->state)		/*Animations*/
@@ -969,6 +998,7 @@ void CloudThink(Entity *self)
 			if(self->delay < 0)
 			{
 				ShootBolt(self->sx + 8, self->sy + 16);
+				Mix_PlayChannel(-1,self->sound[1]->sound,0);
 				self->delay = 30;
 			}
 			else if(self->delay == 0)
@@ -1056,6 +1086,7 @@ Entity *SpawnPixie(int x)
 	pixie = NewEntity();
 	if(pixie == NULL)return pixie;
 	pixie->sprite = LoadSprite("images/pixie.png",32,32);
+	pixie->sound[0] = LoadSound("sounds/pixie_death.wav", MIX_MAX_VOLUME/2);
 	pixie->bbox.x = 0;
 	pixie->bbox.y = 0;
 	pixie->bbox.w = 32;
@@ -1127,6 +1158,7 @@ void PixieThink(Entity *self)
 		self->vy = -20;
 		self->state = ST_DEAD;
 		self->frame = 2;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 
 	switch(self->state)		/*Animations*/
@@ -1160,6 +1192,8 @@ Entity *SpawnFrog(int x, int y, int i)
 	frog = NewEntity();
 	if(frog == NULL)return frog;
 	frog->sprite = LoadSprite("images/frog.png",28,28);
+	frog->sound[0] = LoadSound("sounds/frog_death.wav", MIX_MAX_VOLUME/2);
+	frog->sound[1] = LoadSound("sounds/frog_jump.wav", MIX_MAX_VOLUME/2);
 	frog->bbox.x = 2;
 	frog->bbox.y = 4;
 	frog->bbox.w = 24;
@@ -1206,6 +1240,7 @@ void FrogThink(Entity *self)
 				self->busy = 1;
 				self->delay = 10;
 				self->vy = -12;
+				Mix_PlayChannel(-1,self->sound[1]->sound,0);
 			}
 			else 
 			{
@@ -1254,6 +1289,7 @@ void FrogThink(Entity *self)
 		self->vy = -20;
 		self->state = ST_DEAD;
 		self->frame = 2 + (3 * self->isRight);
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 
 	switch(self->state)		/*Animations*/
@@ -1277,6 +1313,8 @@ Entity *SpawnDrill(int x, int y)
 	drill = NewEntity();
 	if(drill == NULL)return drill;
 	drill->sprite = LoadSprite("images/drill.png",32,30);
+	drill->sound[0] = LoadSound("sounds/drill_death.wav", MIX_MAX_VOLUME/2);
+	drill->sound[1] = LoadSound("sounds/drill_hit.wav", MIX_MAX_VOLUME/2);
 	drill->bbox.x = 0;
 	drill->bbox.y = 0;
 	drill->bbox.w = 32;
@@ -1404,6 +1442,7 @@ void DrillThink(Entity *self)
 			if(self->sy > Player->sy + Player->sprite->h)self->health--;
 			if(self->sx > Player->sx)self->vx = 7;
 			else self->vx = -7;
+			//Mix_PlayChannel(-1,self->sound[1]->sound,0);
 			self->invuln = 0;
 		}
 	}
@@ -1415,6 +1454,7 @@ void DrillThink(Entity *self)
 		self->vy = -20;
 		self->state = ST_DEAD;
 		self->frame = 2;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 
 	switch(self->state)		/*Animations*/
@@ -1449,6 +1489,8 @@ Entity *SpawnBall(int x, int y)
 	ball = NewEntity();
 	if(ball == NULL)return ball;
 	ball->sprite = LoadSprite("images/ball.png",32,32);
+	ball->sound[0] = LoadSound("sounds/ball_death.wav", MIX_MAX_VOLUME/2);
+	ball->sound[1] = LoadSound("sounds/ball_laser.wav", MIX_MAX_VOLUME/2);
 	ball->bbox.x = 0;
 	ball->bbox.y = 0;
 	ball->bbox.w = 32;
@@ -1553,6 +1595,7 @@ void BallThink(Entity *self)
 		self->vy = -20;
 		self->state = ST_DEAD;
 		self->frame = 6;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 	}
 
 	switch(self->state)		/*Animations*/
@@ -1566,6 +1609,7 @@ void BallThink(Entity *self)
 			if(self->delay < 0)								/*Fire*/
 			{
 				ShootLaser(self->sx - 32, self->sy + 12);
+				Mix_PlayChannel(-1,self->sound[1]->sound,0);
 				self->delay = 0;
 				self->busy = 30;
 			}
@@ -1685,6 +1729,7 @@ Entity *SpawnBoss()
 	boss = NewEntity();
 	if(boss == NULL)return boss;
 	boss->sprite = LoadSprite("images/bossbody.png", 72, 94);
+	boss->sound[0] = LoadSound("sounds/boss_quake.wav", MIX_MAX_VOLUME/2);
 	boss->shown = 1;
 	boss->frame = 0;
 	boss->bbox.x = 26;
@@ -1705,6 +1750,7 @@ Entity *SpawnBoss()
 	head1 = NewEntity();
 	if(head1 == NULL)return head1;
 	head1->sprite = LoadSprite("images/bosshead.png", 34, 32);
+	head1->sound[0] = LoadSound("sounds/boss_fireball.wav", MIX_MAX_VOLUME/2);
 	head1->shown = 1;
 	head1->frame = 0;
 	head1->bbox.x = 2;
@@ -1727,6 +1773,7 @@ Entity *SpawnBoss()
 	head2 = NewEntity();
 	if(head2 == NULL)return head2;
 	head2->sprite = LoadSprite("images/bosshead.png", 34, 32);
+	head2->sound[0] = LoadSound("sounds/boss_firewall.wav", MIX_MAX_VOLUME/2);
 	head2->shown = 1;
 	head2->frame = 0;
 	head2->bbox.x = 2;
@@ -1769,6 +1816,8 @@ void BossThink(Entity *self)
 		{
 			if(self->invuln >= 60)self->frame = 1;			/*Tail slam*/
 			else self->frame = 0;
+
+			if(self->invuln == 60)Mix_PlayChannel(-1,self->sound[0]->sound,0);
 			
 			if(self->invuln >= 50 && self->invuln < 60)		/*Player sent back*/
 			{
@@ -1811,7 +1860,7 @@ void BossThink(Entity *self)
 	{
 		self->vy += 1;
 		self->sy += self->vy;
-		if(self->sy >= 800)FreeEntity(self);
+		//if(self->sy >= 800)FreeEntity(self);
 	}
 }
 
@@ -1882,7 +1931,11 @@ void BossHeadThink1(Entity *self)
 			if(self->ct < 0)
 			{
 				self->frame = 1;
-				if(self->ct % 10 == -1)FireBall(self->sx - 12, self->sy + 12);
+				if(self->ct % 10 == -1)
+				{
+					FireBall(self->sx - 12, self->sy + 12);
+					Mix_PlayChannel(-1,self->sound[0]->sound,0);
+				}
 				if(self->ct == -1)self->ct = 30;
 
 				self->ct++;
@@ -1976,6 +2029,7 @@ void BossHeadThink2(Entity *self)
 			{
 				self->frame = 1;
 				FireWall(self->sx - 11, self->sy - 34, 0);
+				Mix_PlayChannel(-1,self->sound[0]->sound,0);
 				self->ct = 30;
 			}
 			if(self->ct > 0)self->ct--;
@@ -1983,8 +2037,8 @@ void BossHeadThink2(Entity *self)
 				{
 					self->frame = 0;
 					self->busy = 0;
-					if(Boss->health >= 3)self->ct = 60;
-					else self->ct = 50;
+					if(Boss->health >= 3)self->ct = 50;
+					else self->ct = 40;
 				}
 		}
 		
@@ -2172,7 +2226,11 @@ void FireWallThink(Entity *self)
 						self->frame++;
 						self->bbox.y = 4;
 						self->bbox.h = 60;
-						if(self->sx > 128)FireWall(self->sx - 32, self->sy, 1);
+						if(self->sx > 128)
+						{
+							FireWall(self->sx - 32, self->sy, 1);
+							//Mix_PlayChannel(-1,self->sound[0]->sound,0);
+						}
 						break;
 					case 4:
 						self->isRight = 0;
@@ -2421,6 +2479,7 @@ Entity *BuildSpring(int x, int y)
 	spring = NewEntity();
 	if(spring == NULL)return spring;
 	spring->sprite = LoadSprite("images/spring.png", 48, 48);
+	spring->sound[0] = LoadSound("sounds/spring.wav", MIX_MAX_VOLUME/2);
 	spring->shown = 1;
 	spring->sx = x;
 	spring->sy = y;
@@ -2450,6 +2509,7 @@ void SpringThink(Entity *self)
 	if(Collide(b1,b2) && Player->uCheck && b2.y + b2.h <= self->sy + self->bbox.y)
 	{
 		Player->vy = -30;
+		Mix_PlayChannel(-1,self->sound[0]->sound,0);
 		self->frame = 1;
 		self->delay = 5;
 	}

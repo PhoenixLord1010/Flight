@@ -1,5 +1,8 @@
+#include <stdlib.h>
 #include "level.h"
 #include "entity.h"
+#include "hud.h"
+#include "audio.h"
 
 extern SDL_Surface *screen;
 extern float offset;
@@ -14,6 +17,9 @@ float cy = 550;		/*Checkpoint position*/
 float coff = 0;		/*Checkpoint offset*/
 float csec = 0;		/*Checkpoint section*/
 Entity *player;
+Entity *boss;
+Mix_Music *BgMusic = NULL;
+char *bgmusic;
 
 void RenderLevel(int level)
 {
@@ -40,14 +46,6 @@ void RenderLevel(int level)
 			//BuildSpring(24, 600-48);
 			//BuildSpring(300, 600-48);
 			//BuildSpikeWall(100, 1000, 3);
-			BuildSpikes(256, 600-31, 40, 0);
-			BuildSpikes(320, 600-31, 40, 30);
-			BuildSpikes(384, 600-31, 40, 0);
-			BuildSpikes(448, 600-31, 40, 30);
-			BuildSpikes(512, 600-31, 40, 0);
-			BuildSpikes(576, 600-31, 40, 30);
-			BuildSpikes(640, 600-31, 40, 0);
-			BuildSpikes(704, 600-31, 40, 30);
 
 			CurrentSection++;
 		}
@@ -56,6 +54,7 @@ void RenderLevel(int level)
 	{
 		if(CurrentSection == 0)
 		{
+			LoadMusic("sounds/bgm_blimpoff.wav");
 			BuildSmallTile(-64);
 			BuildTile(0);
 			BuildTile(256);
@@ -173,6 +172,7 @@ void RenderLevel(int level)
 	{
 		if(CurrentSection == 0)
 		{			
+			LoadMusic("sounds/bgm_girdergrapple.wav");
 			BuildSmallTile(-64);
 			BuildTile(0);
 			BuildTile(256);
@@ -339,6 +339,7 @@ void RenderLevel(int level)
 	{
 		if(CurrentSection == 0)
 		{
+			LoadMusic("sounds/bgm_bigapecity.wav");
 			BuildSmallTile(-64);
 			BuildTile(0);
 			BuildTile(256);
@@ -464,6 +465,7 @@ void RenderLevel(int level)
 	{
 		if(CurrentSection == 0)
 		{
+			LoadMusic("sounds/bgm_cavepart.wav");
 			BuildSmallTile(-64);
 			BuildTile(0);
 			BuildTile(256);
@@ -505,7 +507,6 @@ void RenderLevel(int level)
 		{
 			BuildSmallTile(3072);
 			BuildSmallTile(3328);
-			//BuildSpring(3080, 600-48);
 			BuildSpring(3336, 600-48);
 			BuildCloudPlatform(3328, 350);
 			BuildCloudPlatform(3200, 275);
@@ -606,8 +607,10 @@ void RenderLevel(int level)
 
 	if(level == 5)
 	{
+		
 		if(CurrentSection == 0)
 		{
+			LoadMusic("sounds/bgm_kroolacid.wav");
 			BuildSmallTile(84);
 			BuildSmallTile(512);
 			BuildColumn(512, 600-64);
@@ -625,13 +628,9 @@ void RenderLevel(int level)
 			BuildPlatform(1536, 350);
 			BuildPlatform(1792, 350);
 			BuildSpikes(1536, 350-31, 40, 0);
-			//BuildSpikes(1600, 350-31, 40, 30);
 			BuildSpikes(1664, 350-31, 40, 0);
-			//BuildSpikes(1728, 350-31, 40, 30);
 			BuildSpikes(1792, 350-31, 40, 0);
-			//BuildSpikes(1856, 350-31, 40, 30);
 			BuildSpikes(1920, 350-31, 40, 0);
-			//BuildSpikes(1984, 350-31, 40, 30);
 
 			SpawnPixie(1280);
 			
@@ -785,20 +784,36 @@ void RenderLevel(int level)
 	{
 		if(CurrentSection == 0)
 		{
+			LoadMusic("sounds/bgm_flameheart.wav");
 			BuildTile(96);
 			BuildTile(352);
 			BuildTile(608);
 
-			SpawnBoss();
+			boss = SpawnBoss();
 
 			CurrentSection++;
+		}
+		if(CurrentSection > 0 && boss->sy >= 800)
+		{
+			CurrentLevel += ContinueScreen();
 		}
 	}
 }
 
 void UpdateLevel()
 {
-	if(!lives)exit(1);	/*Game Over*/
+	if(!lives)
+	{
+		if(ContinueScreen())	/*Continue*/
+		{
+			cx = 100;		/*Reset checkpoint stuff*/
+			cy = 550;
+			coff = 0;
+			csec = 0;
+			lives = 3;
+		}
+		else exit(1);			/*Game Over*/
+	}	
 	
 	if(player == NULL)	/*Make a new player at the last checkpoint*/
 	{
@@ -866,8 +881,26 @@ void UpdateLevel()
 		else delay--;
 		return;
 	}
+
+	if(CurrentLevel == 6 && CurrentSection == 1 && boss->sy > 800)CurrentLevel += WinScreen();
 	
 	if(CurrentLevel == 7)exit(1);	/*Win Condition*/
-
+	
 	RenderLevel(CurrentLevel);
+}
+
+void LoadMusic(char *bg)
+{
+	if(BgMusic != NULL)
+    {
+      Mix_HaltMusic();
+      Mix_FreeMusic(BgMusic);
+    }
+	BgMusic = Mix_LoadMUS(bg);
+	if(BgMusic == NULL)
+	{
+		fprintf(stderr, "Unable to Load Background Music: %s\n", SDL_GetError());
+		exit(1);
+	}
+	Mix_PlayMusic(BgMusic,-1);	/*play my background music infinitely*/
 }

@@ -4,6 +4,7 @@
 #include "hud.h"
 #include "entity.h"
 #include "level.h"
+#include "audio.h"
 
 extern SDL_Surface *screen;
 extern SDL_Surface *bgimage;
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
 	Uint8 *keys;
 	
 	Init_ALL();
+	LoadMusic("sounds/bgm_willowwoods.wav");
 	StartScreen();
 	do
 	{	
@@ -49,6 +51,7 @@ void CleanUpAll()
 {
 	CloseSprites();
 	ClearEntities();
+	ClearSoundList();
 }
 
 void Init_ALL()
@@ -56,6 +59,8 @@ void Init_ALL()
 	Init_Graphics(windowed);
 	InitSpriteList();
 	InitEntityList();
+	Init_Audio();
+	InitSoundList();
 	InitKeyboard();
 	InitMessages();
 	LoadFonts();
