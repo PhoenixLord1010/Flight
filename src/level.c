@@ -8,7 +8,7 @@ extern SDL_Surface *screen;
 extern float offset;
 extern float onset;
 
-int CurrentLevel = 6;
+int CurrentLevel = 1;
 int CurrentSection = 0;
 int lives = 3;
 int delay = 30;
@@ -27,7 +27,7 @@ void RenderLevel(int level)
 	{
 		if(CurrentSection == 0)
 		{
-			//SpawnDrill(400, 600);
+			SpawnDrill(600, 600);
 			
 			BuildTile(0);
 			BuildTile(256);
@@ -87,7 +87,7 @@ void RenderLevel(int level)
 			BuildTile(2304);
 			BuildTile(2560);
 			BuildTile(2816);
-			BuildPlatform(2310, 500);
+			BuildPlatform(2410, 500);
 			BuildColumn(3000, 600-64);
 			BuildColumn(3000, 600-128);
 			BuildColumn(3000, 600-192);
@@ -106,6 +106,7 @@ void RenderLevel(int level)
 		{
 			SpawnEye(4100, 450, 0);
 
+			BuildFlag(4096, 600-48, 2);
 			BuildTile(4096);
 			BuildTile(4352);
 			BuildPlatform(4480, 500);
@@ -156,6 +157,7 @@ void RenderLevel(int level)
 			BuildColumn(7232, 600-128);
 			BuildColumn(7808, 600-64);
 			BuildColumn(7808, 600-128);
+			BuildFlag(8200, 600-48, 1);
 
 			SpawnSnake(7400, 600-32, 0);
 			SpawnSnake(7550, 600-32, 0);
@@ -241,6 +243,7 @@ void RenderLevel(int level)
 		}
 		if(CurrentSection == 8)
 		{
+			BuildFlag(4096, 600-48, 2);
 			BuildTile(4096);
 			BuildTile(4352);
 			BuildTile(4608);
@@ -287,10 +290,10 @@ void RenderLevel(int level)
 			BuildWall(6144, 256);
 			BuildWall(6656, 212);
 			BuildWall(6656, 376);
-			BuildWall(6784, 320);
-			BuildWall(7016, 200);
-			BuildWall(7144, 0);
-			BuildWall(7144, 256);
+			BuildWall(6778, 320);
+			BuildWall(7010, 200);
+			BuildWall(7138, 0);
+			BuildWall(7138, 256);
 
 			BuildSnakePot(6784, 200-64, 0, 60);
 			BuildSnakePot(6808, 512-64, 1, 180);
@@ -304,14 +307,15 @@ void RenderLevel(int level)
 			BuildPlatform(7232, 400);
 			BuildPlatform(7744, 300);
 			BuildPlatform(7168, 200);
-			BuildPlatform(7808, 100);
-			BuildWall(8040, 112);
-			BuildWall(8040, 368);
+			BuildPlatform(7808, 108);
+			BuildWall(8034, 120);
+			BuildWall(8034, 376);
 			BuildWall(8192, 0);
 			BuildWall(8192, 256);
 			BuildTile(8064);
 			BuildTile(8192);
 			BuildTile(8448);
+			BuildFlag(8200, 600-48, 1);
 
 			SpawnEye(9500, 500, 0);
 			SpawnEye(9500, 500, 1);
@@ -401,6 +405,7 @@ void RenderLevel(int level)
 		}
 		if(CurrentSection == 8)
 		{
+			BuildFlag(4096, 600-48, 2);
 			BuildTile(4096);
 			BuildTile(4352);
 			BuildSpring(4530, 600-48);
@@ -456,6 +461,7 @@ void RenderLevel(int level)
 			BuildTile(8064);
 			BuildTile(8192);
 			BuildTile(8448);
+			BuildFlag(8200, 600-48, 1);
 
 			CurrentSection++;
 		}
@@ -526,6 +532,7 @@ void RenderLevel(int level)
 		{
 			SpawnDrill(4608, 600);
 			
+			BuildFlag(4096, 600-48, 2);
 			BuildTile(4096);
 			BuildTile(4352);
 			BuildTile(4608);
@@ -600,6 +607,7 @@ void RenderLevel(int level)
 			BuildTile(8064);
 			BuildTile(8192);
 			BuildTile(8448);
+			BuildFlag(8200, 600-48, 1);
 
 			CurrentSection++;
 		}
@@ -638,6 +646,10 @@ void RenderLevel(int level)
 		}
 		if(CurrentSection == 4)
 		{
+			SpawnDrill(2256, 600);
+			SpawnDrill(2640, 600);
+			SpawnDrill(3024, 600);
+			
 			BuildSmallTile(2240);
 			BuildSmallTile(2624);
 			BuildSmallTile(3008);
@@ -648,9 +660,6 @@ void RenderLevel(int level)
 			SpawnEye(2304, 150, 3);
 			SpawnEye(2304, 150, 4);
 			
-			SpawnDrill(2240, 600);
-			SpawnDrill(2624, 600);
-			SpawnDrill(3008, 600);
 			SpawnBall(3472, 100);
 			
 			CurrentSection++;
@@ -685,16 +694,17 @@ void RenderLevel(int level)
 		}
 		if(CurrentSection == 8)
 		{
+			BuildFlag(4096, 600-48, 2);
 			BuildTile(4096);
 			BuildTile(4224);
 			BuildTile(4608);
 			BuildTile(4992);
 
-			BuildSnakePot(4576, -64, 0, 60);
-			BuildSnakePot(4704, -64, 0, 50);
-			BuildSnakePot(4832, -64, 0, 55);
+			BuildSnakePot(4576, -256, 0, 60);
+			BuildSnakePot(4704, -128, 0, 50);
+			BuildSnakePot(4832, -192, 0, 55);
 			BuildSnakePot(4960, -64, 0, 45);
-			BuildSnakePot(5088, -64, 0, 50);
+			BuildSnakePot(5088, -128, 0, 50);
 			
 			CurrentSection++;
 		}
@@ -756,6 +766,7 @@ void RenderLevel(int level)
 			BuildTile(8064);
 			BuildTile(8192);
 			BuildTile(8448);
+			BuildFlag(8200, 600-48, 1);
 			
 			BuildCloudPlatform(7296, 200);
 			BuildSpring(7368, 600-48);
@@ -827,7 +838,7 @@ void UpdateLevel()
 	if(CurrentLevel < 6)
 	{
 		if(player->sx >= (screen->w * 0.5) + offset)offset += player->sx - ((screen->w * 0.5) + offset);						/*Right*/
-		if(player->sx <= (screen->w * 0.2) + offset && offset > onset)offset -= ((screen->w * 0.2) + offset) - player->sx;		/*Left*/
+		if(player->sx <= (screen->w * 0.25) + offset && offset > onset)offset -= ((screen->w * 0.25) + offset) - player->sx;		/*Left*/
 		if(onset + 1024 < offset)onset = offset - 1024;
 	}
 

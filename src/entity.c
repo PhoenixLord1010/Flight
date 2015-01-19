@@ -177,10 +177,10 @@ void CheckCollisions(Entity *self, SDL_Rect box1, SDL_Rect *xCollision, SDL_Rect
 							  *xCollision = box2;
 						  }
 						  else if((self->vy - EntityList[i].vy) <= 0 && !EntityList[i].invuln)
-						  {
-							  self->dCheck = 1;
-							  *yCollision = box2;
-						  }
+							   {
+								   self->dCheck = 1;
+								   *yCollision = box2;
+							   }
 			}
 
 			if(self->state == ST_ENEMY && EntityList[i].state == ST_SPEAR)self->invuln = 1;	/*Enemy was hit*/
@@ -207,6 +207,7 @@ Entity *MakePlayer(int x, int y)
 	player->shown = 1;
 	player->delay = 1;
 	player->busy = 0;
+	player->ct = 0;
 	player->state = ST_IDLE;
 	player->isRight = 1;
 	player->think = PlayerThink;
@@ -302,7 +303,6 @@ void PlayerThink(Entity *self)
 		if(self->sx + self->sprite->w > screen->w + offset)self->sx = screen->w + offset - self->sprite->w;
 		if(self->sy <= 0)self->vy = 1;
 
-
 		self->sx += self->vx;
 		self->sy += self->vy;
 
@@ -348,8 +348,16 @@ void PlayerThink(Entity *self)
 				self->uCheck = 0;
 			}
 		
-			if(isKeyHeld(SDLK_KP0) && self->vy > 0)gravity = 1.5;		/*Float*/
-			else gravity = 13;
+			if(isKeyHeld(SDLK_KP0) && self->vy > 0)		/*Float*/
+			{
+				gravity = 1.5 + (0.05 * self->ct);
+				self->ct++;
+			}
+			else
+			{
+				gravity = 13;
+				self->ct = 0;
+			}
 		}
 
 		if(isKeyPressed(SDLK_KP6) && self->busy <= 0)	/*Right*/
@@ -532,120 +540,122 @@ void SpearThink(Entity *self)
 	self->sy = Player->sy - 20;
 
 	/*Directional Attack*/
-	if(isKeyPressed(SDLK_KP6) && self->busy <= 0)	/*Right*/
+	if(Player->health > 0)
 	{
-		self->bbox.x = 68;
-		self->bbox.y = 38;
-		self->frame = 0;
-		self->shown = 1;
-		self->state = ST_SPEAR;
-		Player->isRight = 1;
-		self->busy = 15;
-		Mix_PlayChannel(-1,self->sound[0]->sound,0);
-	}
-	if(isKeyPressed(SDLK_KP9) && self->busy <= 0)	/*Up-Right*/
-	{
-		self->bbox.x = 60;
-		self->bbox.y = 12;
-		self->frame = 1;
-		self->shown = 1;
-		self->state = ST_SPEAR;
-		Player->isRight = 1;
-		self->busy = 15;
-		Mix_PlayChannel(-1,self->sound[0]->sound,0);
-	}
-	if(isKeyPressed(SDLK_KP3) && self->busy <= 0)	/*Down-Right*/
-	{
-		self->bbox.x = 60;
-		self->bbox.y = 64;
-		self->frame = 2;
-		self->shown = 1;
-		self->state = ST_SPEAR;
-		Player->isRight = 1;
-		self->busy = 15;
-		Mix_PlayChannel(-1,self->sound[0]->sound,0);
-	}
-	if(isKeyPressed(SDLK_KP4) && self->busy <= 0)	/*Left*/
-	{
-		self->bbox.x = 0;
-		self->bbox.y = 38;
-		self->frame = 3;
-		self->shown = 1;
-		self->state = ST_SPEAR;
-		Player->isRight = 0;
-		self->busy = 15;
-		Mix_PlayChannel(-1,self->sound[0]->sound,0);
-	}
-	if(isKeyPressed(SDLK_KP7) && self->busy <= 0)	/*Up-Left*/
-	{
-		self->bbox.x = 8;
-		self->bbox.y = 12;
-		self->frame = 4;
-		self->shown = 1;
-		self->state = ST_SPEAR;
-		Player->isRight = 0;
-		self->busy = 15;
-		Mix_PlayChannel(-1,self->sound[0]->sound,0);
-	}
-	if(isKeyPressed(SDLK_KP1) && self->busy <= 0)	/*Down-Left*/
-	{
-		self->bbox.x = 8;
-		self->bbox.y = 64;
-		self->frame = 5;
-		self->shown = 1;
-		self->state = ST_SPEAR;
-		Player->isRight = 0;
-		self->busy = 15;
-		Mix_PlayChannel(-1,self->sound[0]->sound,0);
-	}
-	if(isKeyPressed(SDLK_KP8) && self->busy <= 0)	/*Up*/
-	{
-		self->bbox.x = 34;
-		self->bbox.y = 0;
-		self->frame = 6;
-		self->shown = 1;
-		self->state = ST_SPEAR;
-		self->busy = 15;
-		Mix_PlayChannel(-1,self->sound[0]->sound,0);
-	}
-	if(isKeyPressed(SDLK_KP2) && self->busy <= 0)	/*Down*/
-	{
-		self->bbox.x = 34;
-		self->bbox.y = 76;
-		self->frame = 7;
-		self->shown = 1;
-		self->state = ST_SPEAR;
-		self->busy = 15;
-		Mix_PlayChannel(-1,self->sound[0]->sound,0);
-	}
-
-	if((isKeyPressed(SDLK_KP_PLUS) || isKeyPressed(SDLK_KP_ENTER)) && self->busy <= 0 && Player->uCheck == 1)	/*Dash*/
-	{
-		if(Player->isRight)
+		if(isKeyPressed(SDLK_KP6) && self->busy <= 0)	/*Right*/
 		{
 			self->bbox.x = 68;
 			self->bbox.y = 38;
 			self->frame = 0;
+			self->shown = 1;
+			self->state = ST_SPEAR;
+			Player->isRight = 1;
+			self->busy = 15;
+			Mix_PlayChannel(-1,self->sound[0]->sound,0);
 		}
-		else 
+		if(isKeyPressed(SDLK_KP9) && self->busy <= 0)	/*Up-Right*/
+		{
+			self->bbox.x = 60;
+			self->bbox.y = 12;
+			self->frame = 1;
+			self->shown = 1;
+			self->state = ST_SPEAR;
+			Player->isRight = 1;
+			self->busy = 15;
+			Mix_PlayChannel(-1,self->sound[0]->sound,0);
+		}
+		if(isKeyPressed(SDLK_KP3) && self->busy <= 0)	/*Down-Right*/
+		{
+			self->bbox.x = 60;
+			self->bbox.y = 64;
+			self->frame = 2;
+			self->shown = 1;
+			self->state = ST_SPEAR;
+			Player->isRight = 1;
+			self->busy = 15;
+			Mix_PlayChannel(-1,self->sound[0]->sound,0);
+		}
+		if(isKeyPressed(SDLK_KP4) && self->busy <= 0)	/*Left*/
 		{
 			self->bbox.x = 0;
 			self->bbox.y = 38;
 			self->frame = 3;
+			self->shown = 1;
+			self->state = ST_SPEAR;
+			Player->isRight = 0;
+			self->busy = 15;
+			Mix_PlayChannel(-1,self->sound[0]->sound,0);
 		}
-		self->shown = 1;
-		self->state = ST_SPEAR;
-		self->busy = 15;
-	}
+		if(isKeyPressed(SDLK_KP7) && self->busy <= 0)	/*Up-Left*/
+		{
+			self->bbox.x = 8;
+			self->bbox.y = 12;
+			self->frame = 4;
+			self->shown = 1;
+			self->state = ST_SPEAR;
+			Player->isRight = 0;
+			self->busy = 15;
+			Mix_PlayChannel(-1,self->sound[0]->sound,0);
+		}
+		if(isKeyPressed(SDLK_KP1) && self->busy <= 0)	/*Down-Left*/
+		{
+			self->bbox.x = 8;
+			self->bbox.y = 64;
+			self->frame = 5;
+			self->shown = 1;
+			self->state = ST_SPEAR;
+			Player->isRight = 0;
+			self->busy = 15;
+			Mix_PlayChannel(-1,self->sound[0]->sound,0);
+		}
+		if(isKeyPressed(SDLK_KP8) && self->busy <= 0)	/*Up*/
+		{
+			self->bbox.x = 34;
+			self->bbox.y = 0;
+			self->frame = 6;
+			self->shown = 1;
+			self->state = ST_SPEAR;
+			self->busy = 15;
+			Mix_PlayChannel(-1,self->sound[0]->sound,0);
+		}
+		if(isKeyPressed(SDLK_KP2) && self->busy <= 0)	/*Down*/
+		{
+			self->bbox.x = 34;
+			self->bbox.y = 76;
+			self->frame = 7;
+			self->shown = 1;
+			self->state = ST_SPEAR;
+			self->busy = 15;
+			Mix_PlayChannel(-1,self->sound[0]->sound,0);
+		}
+			
+		if((isKeyPressed(SDLK_KP_PLUS) || isKeyPressed(SDLK_KP_ENTER)) && self->busy <= 0 && Player->uCheck == 1)	/*Dash*/
+		{
+			if(Player->isRight)
+			{
+				self->bbox.x = 68;
+				self->bbox.y = 38;
+				self->frame = 0;
+			}
+			else 
+			{
+				self->bbox.x = 0;
+				self->bbox.y = 38;
+				self->frame = 3;
+			}
+			self->shown = 1;
+			self->state = ST_SPEAR;
+			self->busy = 15;
+		}
 
-	/*Cooldown*/
-	if(self->busy <= 8)
-	{
-		self->shown = 0;
-		self->state = ST_IDLE;
+		/*Cooldown*/
+		if(self->busy <= 8)
+		{
+			self->shown = 0;
+			self->state = ST_IDLE;
+		}
+		if(self->busy >= 0)self->busy--;
 	}
-	if(self->busy >= 0)self->busy--;
-	
 }
 
 
@@ -1093,12 +1103,12 @@ Entity *SpawnPixie(int x)
 	pixie->bbox.h = 32;
 	pixie->frame = 0;
 	pixie->sx = x;
-	pixie->sy = Player->sy - 600;
+	pixie->sy = -32;
 	pixie->vx = -2;
 	pixie->vy = 20;
 	pixie->shown = 1;
 	pixie->delay = 10;
-	pixie->busy = Player->sy;	/*How far down to go*/
+	pixie->busy = 0;
 	pixie->health = 1;
 	pixie->healthmax = 1;
 	pixie->state = ST_ENEMY;
@@ -1122,9 +1132,11 @@ void PixieThink(Entity *self)
 	b2.h = Player->bbox.h;
 	CheckCollisions(self, b1, &xCol, &yCol, &empty);
 
-	if(self->health > 0 && Player->sx + 480 > self->sx)
+	if(Player->sx + 480 > self->sx)self->busy = 1;
+	
+	if(self->health > 0 && self->busy)
 	{	
-		if(self->sy < self->busy && self->sy < Player->sy)
+		if(self->sy < 600 && self->sy < Player->sy)
 		{
 			self->vy -= 0.3;
 		}
@@ -1134,7 +1146,7 @@ void PixieThink(Entity *self)
 			self->vy = 0;
 			self->busy = self->sy;
 		}
-
+		
 		self->sx += self->vx;
 		self->sy += self->vy;
 
@@ -1327,6 +1339,7 @@ Entity *SpawnDrill(int x, int y)
 	drill->shown = 1;
 	drill->delay = 1;
 	drill->busy = 0;
+	drill->ct = 0;
 	drill->health = 1;
 	drill->healthmax = 1;
 	drill->state = ST_ENEMY;
@@ -1342,7 +1355,9 @@ void DrillThink(Entity *self)
 	int uCheck2;
 	float speed = 4;
 
-	if(self->health > 0)
+	if(Player->sx + 300 > self->sx)self->ct = 1;
+
+	if(self->health > 0 && self->ct)
 	{
 		/*Check for Collisions*/
 		if(self->isRight)b0.x = self->sx + self->bbox.x + self->bbox.w;
@@ -1367,7 +1382,7 @@ void DrillThink(Entity *self)
 
 		/*What to Do if Colliding*/
 		if(self->uCheck)
-		{
+		{	
 			if(self->sy > yCol.y - self->bbox.h)
 				self->vy = -2;
 			else 
@@ -1814,13 +1829,18 @@ void BossThink(Entity *self)
 	{
 		if(self->invuln > 0)	/*When hit*/
 		{
+			if(self->invuln == 63)
+			{
+				Mix_PlayChannel(-1,self->sound[0]->sound,0);
+				self->health--;
+			}
+
 			if(self->invuln >= 60)self->frame = 1;			/*Tail slam*/
 			else self->frame = 0;
 
-			if(self->invuln == 60)Mix_PlayChannel(-1,self->sound[0]->sound,0);
-			
 			if(self->invuln >= 50 && self->invuln < 60)		/*Player sent back*/
 			{
+				Player->invuln = 20;
 				Player->vx = -35;
 				Player->vy = -10;
 			}
@@ -1912,7 +1932,6 @@ void BossHeadThink1(Entity *self)
 
 		if(self->invuln && self->busy <= 0 && Boss->invuln == 0)		/*Hit*/
 		{
-			Boss->health--;
 			Boss->invuln = 63;
 			self->busy = 60;
 			self->frame = 2;
@@ -2008,7 +2027,6 @@ void BossHeadThink2(Entity *self)
 
 		if(self->invuln && self->busy <= 0 && Boss->invuln == 0)		/*Hit*/
 		{
-			Boss->health--;
 			Boss->invuln = 63;
 			self->busy = 60;
 			self->frame = 2;
@@ -2670,6 +2688,47 @@ void SpikeThink(Entity *self)
 	}
 	
 	if(self->sx + self->bbox.w < onset)FreeEntity(self);
+}
+
+Entity *BuildFlag(int x, int y, int i)
+{
+	Entity *flag;
+	flag = NewEntity();
+	if(flag == NULL)return flag;
+	if(i == 1)
+	{
+		flag->sprite = LoadSprite("images/flag1.png", 24, 48);
+		flag->think = NULL;
+	}
+	else
+	{
+		flag->sprite = LoadSprite("images/flag2.png", 24, 48);
+		flag->think = FlagThink;
+	}
+	flag->shown = 1;
+	if(Player->sx < x)flag->frame = 0;
+	else flag->frame = 4;
+	flag->sx = x;
+	flag->sy = y;
+	flag->delay = 0;
+	flag->ct = 0;
+	flag->owner = NULL;
+	return flag;
+}
+
+void FlagThink(Entity *self)
+{
+	if(Player->sx >= self->sx)self->ct = 1;
+
+	if(self->frame < 4 && self->ct)
+	{
+		if(self->delay > 0)self->delay--;
+		else
+		{
+			self->frame++;
+			self->delay = 3;
+		}
+	}
 }
 
 

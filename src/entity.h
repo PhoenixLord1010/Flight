@@ -97,6 +97,8 @@ Entity *BuildSpikeWall(int x, int a, int i);		/*Spike Walls*/
 void WallThink(Entity *self);
 Entity *BuildSpikes(int x, int y, int i, int j);	/*Spikes*/
 void SpikeThink(Entity *self);
+Entity *BuildFlag(int x, int y, int i);				/*Flags*/
+void FlagThink(Entity *self);
 
 /*Keyboard Input Stuff*/
 void InitKeyboard();

@@ -51,6 +51,9 @@ void DrawHUD()
 
 		switch(CurrentLevel)
 		{
+			case 0:
+				num = "Test";
+				break;
 			case 1:
 				num = "Level 1";
 				break;
@@ -83,7 +86,7 @@ int ContinueScreen()
 	int keyn;
 	Uint8 *keys;
 	
-	LoadMusic("sounds/continue.wav");
+	LoadMusic("sounds/bgm_continue.wav");
 	do
 	{
 		ResetBuffer();
