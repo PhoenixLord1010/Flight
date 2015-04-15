@@ -22,6 +22,7 @@ typedef struct ENTITY_T
 	void (*think) (struct ENTITY_T *self);	/*Called by engine to handle inputs*/
 	int used;					/*Is this entity free*/
 	int shown;					/*Should this be rendered*/
+	int layer;					/*What layer is this on*/
 	int frame;					/*Current frame to render*/
 	int state;					/*What state is this in*/
 	float sx,sy;				/*Position*/
@@ -48,6 +49,7 @@ void FreeEntity(Entity *ent);
 void DrawEntity(Entity *ent);
 void DrawEntities();
 void UpdateEntities();
+void UpdateEntityList();
 
 /*Specific Entity Stuff*/
 Entity *MakePlayer(int x, int y);					/*Player*/

@@ -32,6 +32,7 @@ void InitEntityList()
 	for(i = 0; i < MAXENTITIES; i++)
 	{
 		EntityList[i].used = 0;
+		EntityList[i].layer = 10;
 		EntityList[i].think = NULL;
 		if(EntityList[i].sprite != NULL)FreeSprite(EntityList[i].sprite);
 		for(j = 0;j < SOUNDSPERENT;j++)
@@ -77,6 +78,7 @@ Entity *NewEntity()
 		{
 			memset(&EntityList[i], 0, sizeof(Entity));
 			EntityList[i].used = 1;
+			EntityList[i].layer = 1;
 			EntityList[i].shown = 1;
 			EntityList[i].invuln = 0;
 			NumEnts++;
@@ -91,6 +93,7 @@ void FreeEntity(Entity *ent)
 	int j;
 	NumEnts--;
 	ent->used = 0;
+	ent->layer = 10;
 	if(ent->sprite != NULL)FreeSprite(ent->sprite);
 	for(j = 0;j < SOUNDSPERENT;j++)
 	{
@@ -108,17 +111,21 @@ void DrawEntity(Entity *ent)
 
 void DrawEntities()
 {
-	int i;
-	for(i = 0; i < MAXENTITIES; i++)
+	int i,j;
+	for(j = 0; j < 10; j++)
 	{
-		if((EntityList[i].used > 0) && (EntityList[i].shown > 0))
-			DrawEntity(&EntityList[i]);
+		for(i = 0; i < MAXENTITIES; i++)
+		{
+			if((EntityList[i].used > 0) && (EntityList[i].shown > 0) && (EntityList[i].layer == j))
+				DrawEntity(&EntityList[i]);
+		}
 	}
 }
 
 void UpdateEntities()
 {
 	int i;
+
 	for(i = 0; i < MAXENTITIES; i++)
 	{
 		if(EntityList[i].used)
@@ -1337,6 +1344,7 @@ Entity *SpawnDrill(int x, int y)
 	drill->vx = -4;
 	drill->vy = 0;
 	drill->shown = 1;
+	drill->layer = 0;
 	drill->delay = 1;
 	drill->busy = 0;
 	drill->ct = 0;
@@ -2706,6 +2714,7 @@ Entity *BuildFlag(int x, int y, int i)
 		flag->think = FlagThink;
 	}
 	flag->shown = 1;
+	flag->layer = 0;
 	if(Player->sx < x)flag->frame = 0;
 	else flag->frame = 4;
 	flag->sx = x;

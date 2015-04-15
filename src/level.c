@@ -27,7 +27,7 @@ void RenderLevel(int level)
 	{
 		if(CurrentSection == 0)
 		{
-			SpawnDrill(600, 600);
+			
 			
 			BuildTile(0);
 			BuildTile(256);
@@ -37,6 +37,7 @@ void RenderLevel(int level)
 			//SpawnCloud();
 			//SpawnPixie(1200);
 			//SpawnFrog(900, 600-28, 0);
+			SpawnDrill(600, 600);
 			//SpawnBall(900, 300);
 			
 			//BuildCloudPlatform(300, 350);
